@@ -1,3 +1,6 @@
+use crate::{validate_spath_for_option, validate_spath_for_result, SPath};
+use crate::{Error, Result};
+use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -12,49 +15,187 @@ pub struct SFile {
 	path: PathBuf,
 }
 
-/// Constructors that guarantees the SFile contract describe in the struct
-impl SFile {
-	/// Constructor from Path.
-	pub fn from_path(path: impl AsRef<Path>) -> Option<Self> {
-		let path = path.as_ref();
-
-		// Result the SFile only the entry is a file and the path is utf8 compatible
-		if path.is_file() && path.to_str().is_some() && path.file_name().is_some() {
-			Some(Self {
-				path: path.to_path_buf(),
-			})
-		} else {
-			None
-		}
-	}
-
-	/// Constructor from fs DirEntry.
-	pub fn from_fs_entry(fs_entry: fs::DirEntry) -> Option<Self> {
-		let is_file = fs_entry.file_type().map(|ft| ft.is_file()).unwrap_or(false);
-		let path = fs_entry.path();
-		// Result the SFile only the entry is a file and the path is utf8 compatible
-		if is_file && path.to_str().is_some() && path.file_name().is_some() {
-			Some(Self {
-				path: path.to_path_buf(),
-			})
-		} else {
-			None
-		}
-	}
-
-	/// Constructor from walkdir entry.
-	pub fn from_walkdir_entry(wd_entry: walkdir::DirEntry) -> Option<Self> {
-		let path = wd_entry.path();
-		// Result the SFile only the entry is a file and the path is utf8 compatible
-		if wd_entry.file_type().is_file() && path.to_str().is_some() && path.file_name().is_some() {
-			Some(Self {
-				path: wd_entry.into_path(),
-			})
-		} else {
-			None
-		}
+impl AsRef<Path> for SFile {
+	fn as_ref(&self) -> &Path {
+		self.path.as_ref()
 	}
 }
+
+impl fmt::Display for SFile {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.to_str())
+	}
+}
+
+impl From<SFile> for String {
+	fn from(val: SFile) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+impl From<&SFile> for String {
+	fn from(val: &SFile) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+/// Constructors that guarantees the SFile contract describe in the struct
+impl SFile {
+	/// Constructor from Path and all impl AsRef<Path>.
+	///
+	/// Returns Result<SFile>
+	///
+	/// Note: Prefer the use of the SPath::try_from(...) when available as it might
+	///       avoid a PathBuf allocation.
+	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
+		let path = path.as_ref();
+
+		validate_sfile_for_result(path)?;
+
+		Ok(Self {
+			path: path.to_path_buf(),
+		})
+	}
+
+	/// Constructor for anything that impl AsRef<Path>.
+	///
+	/// Returns Option<SFile>. Useful for filter_map.
+	///
+	/// Note: Favor using concrete type functions like `SPath::from_path_buf_ok`
+	///       when available.
+	pub fn from_path_ok(path: impl AsRef<Path>) -> Option<Self> {
+		let path = path.as_ref();
+		validate_sfile_for_option(path)?;
+
+		Some(Self {
+			path: path.to_path_buf(),
+		})
+	}
+
+	/// Constructor from PathBuf returning an Option, none if validation fail.
+	/// Useful for filter_map.
+	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
+		validate_sfile_for_option(&path_buf)?;
+		Some(Self { path: path_buf })
+	}
+
+	/// Constructor from fs::DirEntry returning an Option, none if validation fail.
+	/// Useful for filter_map.
+	pub fn from_fs_entry_ok(fs_entry: fs::DirEntry) -> Option<Self> {
+		let path_buf = fs_entry.path();
+		validate_sfile_for_option(&path_buf)?;
+		Some(Self { path: path_buf })
+	}
+
+	/// Constructor from walkdir::DirEntry returning an Option, none if validation fail.
+	/// Useful for filter_map.
+	pub fn from_walkdir_entry_ok(wd_entry: walkdir::DirEntry) -> Option<Self> {
+		let path = wd_entry.path();
+		validate_sfile_for_option(path)?;
+		Some(Self {
+			path: wd_entry.into_path(),
+		})
+	}
+}
+
+// region:    --- TryFroms
+
+impl TryFrom<&str> for SFile {
+	type Error = Error;
+	fn try_from(path: &str) -> Result<SFile> {
+		let path = Path::new(path);
+		validate_sfile_for_result(path)?;
+
+		Ok(Self {
+			path: path.to_path_buf(),
+		})
+	}
+}
+
+impl TryFrom<String> for SFile {
+	type Error = Error;
+	fn try_from(path: String) -> Result<SFile> {
+		SFile::try_from(path.as_str())
+	}
+}
+
+impl TryFrom<&String> for SFile {
+	type Error = Error;
+	fn try_from(path: &String) -> Result<SFile> {
+		SFile::try_from(path.as_str())
+	}
+}
+
+impl TryFrom<PathBuf> for SFile {
+	type Error = Error;
+	fn try_from(path_buf: PathBuf) -> Result<SFile> {
+		validate_sfile_for_result(&path_buf)?;
+
+		Ok(Self { path: path_buf })
+	}
+}
+
+impl TryFrom<fs::DirEntry> for SFile {
+	type Error = Error;
+	fn try_from(fs_entry: fs::DirEntry) -> Result<SFile> {
+		let path_buf = fs_entry.path();
+		validate_sfile_for_result(&path_buf)?;
+
+		Ok(Self { path: path_buf })
+	}
+}
+
+impl TryFrom<walkdir::DirEntry> for SFile {
+	type Error = Error;
+	fn try_from(wd_entry: walkdir::DirEntry) -> Result<SFile> {
+		let path = wd_entry.path();
+
+		validate_sfile_for_result(path)?;
+
+		Ok(Self {
+			path: wd_entry.into_path(),
+		})
+	}
+}
+
+impl TryFrom<SPath> for SFile {
+	type Error = Error;
+	fn try_from(spath: SPath) -> Result<SFile> {
+		let path = spath.path();
+
+		validate_sfile_for_result(path)?;
+
+		Ok(Self {
+			path: spath.into_path_buf(),
+		})
+	}
+}
+// endregion: --- TryFroms
+
+// region:    --- File Validation
+
+fn validate_sfile_for_result(path: &Path) -> Result<()> {
+	validate_spath_for_result(path)?;
+
+	if path.is_file() {
+		Ok(())
+	} else {
+		Err(Error::FileNotFound(path.to_string_lossy().to_string()))
+	}
+}
+
+/// Validate but without generating an error (good for the _ok constructors)
+fn validate_sfile_for_option(path: &Path) -> Option<()> {
+	validate_spath_for_option(path)?;
+
+	if path.is_file() {
+		Some(())
+	} else {
+		None
+	}
+}
+
+// endregion: --- File Validation
 
 /// Public return Path constructs.
 impl SFile {

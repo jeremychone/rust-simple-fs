@@ -1,11 +1,11 @@
 [package]
 name = "simple-fs"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Simple and convenient API for File System access"
-categories = ["Filesystem"]
+categories = ["filesystem"]
 keywords = [
 	"file-system",
 	"json",
@@ -17,10 +17,9 @@ repository = "https://github.com/jeremychone/rust-simple-fs"
 
 [lints.rust]
 unsafe_code = "forbid"
-unused = "allow" # For early dev.
+# unused = "allow" # For early dev.
 
 [features]
-"default" = ["with-json", "with-toml"]
 "with-json" = ["serde", "serde_json"]
 "with-toml" = ["serde", "toml"]
 

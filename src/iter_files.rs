@@ -1,8 +1,6 @@
 use crate::glob::{get_glob_set, DEFAULT_EXCLUDE_GLOBS};
 use crate::{Result, SFile};
-use globset::{Glob, GlobSet, GlobSetBuilder};
-use std::fs::{self, DirEntry};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use walkdir::WalkDir;
 
 pub fn iter_files(
@@ -70,7 +68,7 @@ fn iter_files_impl(
 		)
 		.filter_map(|e| e.ok().filter(|e| e.file_type().is_file()));
 
-	let sfile_iter = walk_dir_it.filter_map(SFile::from_walkdir_entry);
+	let sfile_iter = walk_dir_it.filter_map(SFile::from_walkdir_entry_ok);
 
 	Ok(sfile_iter)
 }
@@ -84,7 +82,7 @@ mod tests {
 	type Result<T> = core::result::Result<T, Error>;
 
 	#[test]
-	fn test_file_name() -> Result<()> {
+	fn test_iter_files_simple_ok() -> Result<()> {
 		let excludes = [
 			//
 			DEFAULT_EXCLUDE_GLOBS,
@@ -92,9 +90,13 @@ mod tests {
 		]
 		.concat();
 
-		for sf in iter_files("./", Some(&["**/"]), Some(&excludes))? {
-			println!("->> {sf:?}");
-		}
+		// TODO: Implement more and complete tests.
+
+		let iter = iter_files("./", Some(&["**/"]), Some(&excludes))?;
+
+		// Very trivial check.
+		assert_eq!(iter.count(), 6);
+
 		Ok(())
 	}
 }
