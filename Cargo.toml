@@ -1,0 +1,41 @@
+[package]
+name = "simple-fs"
+version = "0.0.1"
+edition = "2021"
+authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "Simple and convenient API for File System access"
+categories = ["Filesystem"]
+keywords = [
+	"file-system",
+	"json",
+	"toml",
+	"io"
+]
+homepage = "https://github.com/jeremychone/rust-simple-fs"
+repository = "https://github.com/jeremychone/rust-simple-fs"
+
+[lints.rust]
+unsafe_code = "forbid"
+unused = "allow" # For early dev.
+
+[features]
+"default" = ["with-json", "with-toml"]
+"with-json" = ["serde", "serde_json"]
+"with-toml" = ["serde", "toml"]
+
+[dependencies]
+# -- Files
+walkdir = "2"
+globset = "0.4"
+notify = "6"
+notify-debouncer-mini = "0.4"
+# -- Other
+derive_more = {version = "1.0.0-beta", features = ["from"] }
+
+# -- Feature: json, toml
+serde = { version = "1", features = ["derive"], optional = true}
+# -- Feature: json
+serde_json = { version = "1", optional = true}
+# -- Feature: toml
+toml = {version = "0.8", optional = true}
