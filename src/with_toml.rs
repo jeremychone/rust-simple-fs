@@ -22,7 +22,7 @@ where
 	let file = File::create(file_path).map_err(|e| Error::FileCantCreate((file_path, e).into()))?;
 
 	let toml_string = toml::to_string(data).map_err(|e| Error::TomlCantWrite((file_path, e).into()))?;
-	fs::write(file_path, toml_string).map_err(|e| Error::FileCantCreate((file_path, e).into()))?;
+	fs::write(file_path, toml_string).map_err(|e| Error::TomlCantWrite((file_path, e).into()))?;
 
 	Ok(())
 }
