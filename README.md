@@ -2,6 +2,8 @@
 
 [simple-fs](https://github.com/jeremychone/rust-simple-fs) is a crate that provides a set of convenient and common file APIs built on `std::fs`, [walkdir](https://crates.io/crates/walkdir), and [globset](https://crates.io/crates/globset).
 
+## Concept 
+
 `simple-fs` operates under the assumption that paths which are not `utf8` are not visible to the API, which simplifies many of the path-related APIs.
 
 The two constructs that follow this assumption are:
@@ -21,6 +23,14 @@ The crate also includes other convenient, common APIs:
 - `iter_files(dir, include_globs: &[&str], exclude_globs: &[&str]) -> Result<impl Iter...>`
 
 For more control, it is recommended to use `std::fs`, `walkdir`, `globset`, and other crates directly.
+
+
+## Cargo Features
+
+- `with-json` - For `load_json`, `save_json`, `save_json_pretty`
+- `with-toml` - For `load_toml`, `save_toml`
+- `bin-nums` - For `save_be_f64`, `save_le_f64`, `load_be_f64`, ...
+
 
 This is a very early implementation, with more to come.
 

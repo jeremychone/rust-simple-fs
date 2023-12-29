@@ -1,5 +1,5 @@
+use crate::file::create_file;
 use crate::{get_buf_reader, Error, Result};
-use std::fs::File;
 use std::path::Path;
 
 pub fn load_json<T>(file: impl AsRef<Path>) -> Result<T>
@@ -32,7 +32,7 @@ fn save_json_impl<T>(file_path: &Path, data: &T, pretty: bool) -> Result<()>
 where
 	T: serde::Serialize,
 {
-	let file = File::create(file_path).map_err(|e| Error::FileCantCreate((file_path, e).into()))?;
+	let file = create_file(file_path)?;
 
 	let res = if pretty {
 		serde_json::to_writer_pretty(file, data)

@@ -14,7 +14,9 @@ pub enum Error {
 	FileNotFound(String),
 	FileCantOpen(PathAndCause),
 	FileCantRead(PathAndCause),
+	FileCantWrite(PathAndCause),
 	FileCantCreate(PathAndCause),
+	FileHasNoParent(String),
 
 	// -- Dir
 	DirCantCreateAll(PathAndCause),
