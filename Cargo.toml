@@ -1,6 +1,6 @@
 [package]
 name = "simple-fs"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -20,7 +20,6 @@ unsafe_code = "forbid"
 # unused = "allow" # For early dev.
 
 [features]
-default = ["full"]
 "full" = ["with-json", "with-toml", "bin-nums"]
 "with-json" = ["serde", "serde_json"]
 "with-toml" = ["serde", "toml"]
