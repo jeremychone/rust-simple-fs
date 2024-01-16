@@ -7,6 +7,7 @@ mod glob;
 mod iter_files;
 mod sfile;
 mod spath;
+mod watch;
 
 #[cfg(feature = "bin-nums")]
 mod bin_nums;
@@ -25,6 +26,7 @@ pub use glob::*;
 pub use iter_files::*;
 pub use sfile::*;
 pub use spath::*;
+pub use watch::*;
 
 #[cfg(feature = "with-json")]
 pub use with_json::*;

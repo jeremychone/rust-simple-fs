@@ -34,6 +34,13 @@ pub enum Error {
 		cause: globset::Error,
 	},
 
+	// -- Watch
+	FailToWatch {
+		path: String,
+		cause: String,
+	},
+	CantWatchPathNotFound(String),
+
 	// -- with-json
 	#[cfg(feature = "with-json")]
 	JsonCantRead(PathAndCause),
