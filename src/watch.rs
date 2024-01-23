@@ -1,5 +1,5 @@
 use crate::{Error, Result, SPath};
-use notify::{self, FsEventWatcher, RecursiveMode, Watcher};
+use notify::{self, RecommendedWatcher , RecursiveMode, Watcher};
 use notify_debouncer_full::{new_debouncer, DebounceEventHandler, DebounceEventResult, Debouncer, FileIdMap};
 use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -47,7 +47,7 @@ impl From<notify::EventKind> for SEventKind {
 pub struct SWatcher {
 	pub rx: Receiver<Vec<SEvent>>,
 	// Note: Here we keep the debouncer so that it is not drop and continue to run.
-	notify_full_debouncer: Debouncer<FsEventWatcher, FileIdMap>,
+	notify_full_debouncer: Debouncer<RecommendedWatcher, FileIdMap>,
 }
 
 // endregion: --- SimpleEvent
