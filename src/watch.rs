@@ -1,5 +1,5 @@
 use crate::{Error, Result, SPath};
-use notify::{self, RecommendedWatcher , RecursiveMode, Watcher};
+use notify::{self, RecommendedWatcher, RecursiveMode, Watcher};
 use notify_debouncer_full::{new_debouncer, DebounceEventHandler, DebounceEventResult, Debouncer, FileIdMap};
 use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -97,7 +97,7 @@ impl DebounceEventHandler for EventHandler {
 					let _ = self.tx.send(sevents);
 				}
 			}
-			Err(err) => println!("->> handle_evcent error {err:?}"),
+			Err(err) => println!("simple-fs - handle_event error {err:?}"), // might want to trace
 		}
 	}
 }
