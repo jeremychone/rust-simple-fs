@@ -41,25 +41,24 @@ fn iter_files_impl(
 		.max_depth(depth)
 		.into_iter()
 		.filter_entry(move |e|
-			// if dir, check the dir exclude
+			// if dir, check the exclude.
+			// Note: Important not to check the includes for directories, as they will always fail.
 			if e.file_type().is_dir() {
-				// !base_dir_exclude.is_match(e.path())
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
 					!exclude_globs.is_match(e.path())
 				} else {
 					true
 				}
 			}
-			// else file, we apply the globs
+			// else file, we apply the globs.
 			else {
-				// first, evaluate the exclude
+				// first, evaluate the exclude.
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
 					if exclude_globs.is_match(e.path()) {
 						return false;
 					}
 				}
-
-				// And then, evaluate the include
+				// And then, evaluate the include.
 				match include_globs.as_ref() {
 					Some(globs) => globs.is_match(e.path()),
 					None => true,

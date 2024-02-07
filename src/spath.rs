@@ -13,30 +13,6 @@ pub struct SPath {
 	path: PathBuf,
 }
 
-impl AsRef<Path> for SPath {
-	fn as_ref(&self) -> &Path {
-		self.path.as_ref()
-	}
-}
-
-impl fmt::Display for SPath {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.to_str())
-	}
-}
-
-impl From<SPath> for String {
-	fn from(val: SPath) -> Self {
-		val.to_str().to_string()
-	}
-}
-
-impl From<&SPath> for String {
-	fn from(val: &SPath) -> Self {
-		val.to_str().to_string()
-	}
-}
-
 /// Constructors that guarantees the SPath contract describe in the struct
 impl SPath {
 	/// Constructor from Path and all impl AsRef<Path>.
@@ -95,6 +71,80 @@ impl SPath {
 		})
 	}
 }
+
+/// Public return Path constructs.
+impl SPath {
+	pub fn into_path_buf(self) -> PathBuf {
+		self.path
+	}
+
+	pub fn path(&self) -> &Path {
+		&self.path
+	}
+}
+
+/// Public file components as str methods.
+impl SPath {
+	/// Returns the &str of the path.
+	///
+	/// NOTE: We know that this must be Some() since the SPath constructor guarantees that
+	///       the path.to_str() is valid.
+	pub fn to_str(&self) -> &str {
+		self.path.to_str().unwrap_or_default()
+	}
+
+	/// Returns the &str representation of the file_name()
+	///
+	/// NOTE: According to the constructors' contract, this method will never return ""
+	///       as a file_name() is required for construction.
+	pub fn file_name(&self) -> &str {
+		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
+	}
+
+	/// Returns the &str representation of the file_name()
+	///
+	/// NOTE: According to the constructors' contract, this method will never return ""
+	///       as a file_name() is required for construction, and stem is always part of it.
+	pub fn stem(&self) -> &str {
+		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
+	}
+
+	/// Returns the Option<&str> representation of the extension().
+	///
+	/// NOTE: This should never be a non-UTF-8 string
+	///       as the path was validated during SPath construction.
+	pub fn extension(&self) -> Option<&str> {
+		self.path.extension().and_then(|os_str| os_str.to_str())
+	}
+}
+
+// region:    --- Std Traits Impls
+
+impl AsRef<Path> for SPath {
+	fn as_ref(&self) -> &Path {
+		self.path.as_ref()
+	}
+}
+
+impl fmt::Display for SPath {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.to_str())
+	}
+}
+
+impl From<SPath> for String {
+	fn from(val: SPath) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+impl From<&SPath> for String {
+	fn from(val: &SPath) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+// endregion: --- Std Traits Impls
 
 // region:    --- TryFrom
 
@@ -180,49 +230,3 @@ pub(crate) fn validate_spath_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- Path Validation
-
-/// Public return Path constructs.
-impl SPath {
-	pub fn into_path_buf(self) -> PathBuf {
-		self.path
-	}
-
-	pub fn path(&self) -> &Path {
-		&self.path
-	}
-}
-
-/// Public file components as str methods.
-impl SPath {
-	/// Returns the &str of the path.
-	///
-	/// NOTE: We know that this must be Some() since the SPath constructor guarantees that
-	///       the path.to_str() is valid.
-	pub fn to_str(&self) -> &str {
-		self.path.to_str().unwrap_or_default()
-	}
-
-	/// Returns the &str representation of the file_name()
-	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction.
-	pub fn file_name(&self) -> &str {
-		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
-	}
-
-	/// Returns the &str representation of the file_name()
-	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction, and stem is always part of it.
-	pub fn stem(&self) -> &str {
-		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
-	}
-
-	/// Returns the Option<&str> representation of the extension().
-	///
-	/// NOTE: This should never be a non-UTF-8 string
-	///       as the path was validated during SPath construction.
-	pub fn extension(&self) -> Option<&str> {
-		self.path.extension().and_then(|os_str| os_str.to_str())
-	}
-}

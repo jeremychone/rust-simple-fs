@@ -15,30 +15,6 @@ pub struct SFile {
 	path: PathBuf,
 }
 
-impl AsRef<Path> for SFile {
-	fn as_ref(&self) -> &Path {
-		self.path.as_ref()
-	}
-}
-
-impl fmt::Display for SFile {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.to_str())
-	}
-}
-
-impl From<SFile> for String {
-	fn from(val: SFile) -> Self {
-		val.to_str().to_string()
-	}
-}
-
-impl From<&SFile> for String {
-	fn from(val: &SFile) -> Self {
-		val.to_str().to_string()
-	}
-}
-
 /// Constructors that guarantees the SFile contract describe in the struct
 impl SFile {
 	/// Constructor from Path and all impl AsRef<Path>.
@@ -97,6 +73,90 @@ impl SFile {
 		})
 	}
 }
+
+/// Public return Path constructs.
+impl SFile {
+	pub fn into_path_buf(self) -> PathBuf {
+		self.path
+	}
+
+	pub fn path(&self) -> &Path {
+		&self.path
+	}
+}
+
+/// Public file components as str methods.
+impl SFile {
+	/// Returns the &str of the path.
+	///
+	/// NOTE: We know that this must be Some() since the SFile constructor guarantees that
+	///       the path.to_str() is valid.
+	pub fn to_str(&self) -> &str {
+		self.path.to_str().unwrap_or_default()
+	}
+
+	/// Returns the &str representation of the file_name()
+	///
+	/// NOTE: According to the constructors' contract, this method will never return ""
+	///       as a file_name() is required for construction.
+	pub fn file_name(&self) -> &str {
+		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
+	}
+
+	/// Returns the &str representation of the file_stem()
+	///
+	/// NOTE: According to the constructors' contract, this method will never return ""
+	///       as a file_name() is required for construction, and stem is always part of it.
+	pub fn file_stem(&self) -> &str {
+		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
+	}
+
+	#[deprecated = "use file_stem(..)"]
+	pub fn stem(&self) -> &str {
+		self.file_stem()
+	}
+
+	/// Returns the Option<&str> representation of the extension().
+	///
+	/// NOTE: This should never be a non-UTF-8 string
+	///       as the path was validated during SFile construction.
+	pub fn extension(&self) -> Option<&str> {
+		self.path.extension().and_then(|os_str| os_str.to_str())
+	}
+
+	/// Returns the extension or "" if no extension
+	pub fn ext(&self) -> &str {
+		self.extension().unwrap_or_default()
+	}
+}
+
+// region:    --- Std Traits Impls
+
+impl AsRef<Path> for SFile {
+	fn as_ref(&self) -> &Path {
+		self.path.as_ref()
+	}
+}
+
+impl fmt::Display for SFile {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.to_str())
+	}
+}
+
+impl From<SFile> for String {
+	fn from(val: SFile) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+impl From<&SFile> for String {
+	fn from(val: &SFile) -> Self {
+		val.to_str().to_string()
+	}
+}
+
+// endregion: --- Std Traits Impls
 
 // region:    --- TryFroms
 
@@ -196,59 +256,3 @@ fn validate_sfile_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- File Validation
-
-/// Public return Path constructs.
-impl SFile {
-	pub fn into_path_buf(self) -> PathBuf {
-		self.path
-	}
-
-	pub fn path(&self) -> &Path {
-		&self.path
-	}
-}
-
-/// Public file components as str methods.
-impl SFile {
-	/// Returns the &str of the path.
-	///
-	/// NOTE: We know that this must be Some() since the SFile constructor guarantees that
-	///       the path.to_str() is valid.
-	pub fn to_str(&self) -> &str {
-		self.path.to_str().unwrap_or_default()
-	}
-
-	/// Returns the &str representation of the file_name()
-	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction.
-	pub fn file_name(&self) -> &str {
-		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
-	}
-
-	/// Returns the &str representation of the file_stem()
-	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction, and stem is always part of it.
-	pub fn file_stem(&self) -> &str {
-		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
-	}
-
-	#[deprecated = "use file_stem(..)"]
-	pub fn stem(&self) -> &str {
-		self.file_stem()
-	}
-
-	/// Returns the Option<&str> representation of the extension().
-	///
-	/// NOTE: This should never be a non-UTF-8 string
-	///       as the path was validated during SFile construction.
-	pub fn extension(&self) -> Option<&str> {
-		self.path.extension().and_then(|os_str| os_str.to_str())
-	}
-
-	/// Returns the extension or "" if no extension
-	pub fn ext(&self) -> &str {
-		self.extension().unwrap_or_default()
-	}
-}
