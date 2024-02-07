@@ -18,6 +18,10 @@ pub enum Error {
 	FileCantCreate(PathAndCause),
 	FileHasNoParent(String),
 
+	// -- Meta
+	CantGetMetadata(PathAndCause),
+	CantGetMetadataModified(PathAndCause),
+
 	// -- Dir
 	DirCantCreateAll(PathAndCause),
 

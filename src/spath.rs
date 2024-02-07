@@ -2,6 +2,7 @@ use crate::{Error, Result};
 use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 /// An SPath can be constructed from a Path, io::DirEntry, or walkdir::DirEntry
 /// and guarantees the following:
@@ -15,6 +16,18 @@ pub struct SPath {
 
 /// Constructors that guarantees the SPath contract describe in the struct
 impl SPath {
+	/// Constructor for SPath accepting anything that implements Into<PathBuf>.
+	///
+	/// Note: This is quite ergonomic and allows for avoiding a PathBuf allocation
+	///       if a PathBuf is provided.
+	pub fn new(path: impl Into<PathBuf>) -> Result<Self> {
+		let path = path.into();
+
+		validate_spath_for_result(&path)?;
+
+		Ok(Self { path })
+	}
+
 	/// Constructor from Path and all impl AsRef<Path>.
 	///
 	/// Returns Result<SPath>
@@ -125,6 +138,24 @@ impl SPath {
 	/// Returns the extension or "" if no extension
 	pub fn ext(&self) -> &str {
 		self.extension().unwrap_or_default()
+	}
+
+	pub fn is_dir(&self) -> bool {
+		self.path.is_dir()
+	}
+
+	pub fn is_file(&self) -> bool {
+		self.path.is_file()
+	}
+
+	// Returns the path.metadata modified.
+	pub fn modified(&self) -> Result<SystemTime> {
+		let path = self.path();
+		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
+		let last_modified = metadata
+			.modified()
+			.map_err(|ex| Error::CantGetMetadataModified((path, ex).into()))?;
+		Ok(last_modified)
 	}
 }
 
