@@ -105,8 +105,13 @@ impl SPath {
 	///
 	/// NOTE: According to the constructors' contract, this method will never return ""
 	///       as a file_name() is required for construction, and stem is always part of it.
-	pub fn stem(&self) -> &str {
+	pub fn file_stem(&self) -> &str {
 		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
+	}
+
+	#[deprecated = "use file_stem(..)"]
+	pub fn stem(&self) -> &str {
+		self.file_stem()
 	}
 
 	/// Returns the Option<&str> representation of the extension().
@@ -115,6 +120,11 @@ impl SPath {
 	///       as the path was validated during SPath construction.
 	pub fn extension(&self) -> Option<&str> {
 		self.path.extension().and_then(|os_str| os_str.to_str())
+	}
+
+	/// Returns the extension or "" if no extension
+	pub fn ext(&self) -> &str {
+		self.extension().unwrap_or_default()
 	}
 }
 
