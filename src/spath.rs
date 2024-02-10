@@ -2,7 +2,7 @@ use crate::{Error, Result};
 use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// An SPath can be constructed from a Path, io::DirEntry, or walkdir::DirEntry
 /// and guarantees the following:
@@ -156,6 +156,20 @@ impl SPath {
 			.modified()
 			.map_err(|ex| Error::CantGetMetadataModified((path, ex).into()))?;
 		Ok(last_modified)
+	}
+
+	/// Returns the epoch duration in microseconds.
+	/// Note: The maximum UTC date would be approximately `292277-01-09 04:00:54 UTC`.
+	///       Thus, for all intents and purposes, it is far enough to not worry.
+	pub fn modified_us(&self) -> Result<i64> {
+		let modified = self.modified()?;
+		let since_the_epoch = modified
+			.duration_since(UNIX_EPOCH)
+			.map_err(Error::CantGetDurationSystemTimeError)?;
+
+		let modified_us = since_the_epoch.as_micros().min(i64::MAX as u128) as i64;
+
+		Ok(modified_us)
 	}
 }
 

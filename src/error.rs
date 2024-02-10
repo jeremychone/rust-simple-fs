@@ -1,6 +1,7 @@
 use derive_more::From;
 use std::io;
 use std::path::Path;
+use std::time::SystemTimeError;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -21,6 +22,9 @@ pub enum Error {
 	// -- Meta
 	CantGetMetadata(PathAndCause),
 	CantGetMetadataModified(PathAndCause),
+
+	// -- Time
+	CantGetDurationSystemTimeError(SystemTimeError),
 
 	// -- Dir
 	DirCantCreateAll(PathAndCause),
