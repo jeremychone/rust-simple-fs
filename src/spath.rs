@@ -14,7 +14,7 @@ pub struct SPath {
 	path: PathBuf,
 }
 
-/// Constructors that guarantees the SPath contract describe in the struct
+/// Constructors that guarantee the SPath contract described in the struct
 impl SPath {
 	/// Constructor for SPath accepting anything that implements Into<PathBuf>.
 	///
@@ -59,14 +59,14 @@ impl SPath {
 		})
 	}
 
-	/// Constructor from PathBuf returning an Option, none if validation fail.
+	/// Constructor from PathBuf returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		validate_spath_for_option(&path_buf)?;
 		Some(Self { path: path_buf })
 	}
 
-	/// Constructor from fs::DirEntry returning an Option, none if validation fail.
+	/// Constructor from fs::DirEntry returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_fs_entry_ok(fs_entry: fs::DirEntry) -> Option<Self> {
 		let path_buf = fs_entry.path();
@@ -74,7 +74,7 @@ impl SPath {
 		Some(Self { path: path_buf })
 	}
 
-	/// Constructor from walkdir::DirEntry returning an Option, none if validation fail.
+	/// Constructor from walkdir::DirEntry returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_walkdir_entry_ok(wd_entry: walkdir::DirEntry) -> Option<Self> {
 		let path = wd_entry.path();

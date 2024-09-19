@@ -66,6 +66,7 @@ pub enum Error {
 
 #[derive(Debug)]
 pub enum Cause {
+	#[allow(unused)]
 	Io(Box<io::Error>),
 
 	#[cfg(feature = "with-json")]

@@ -41,7 +41,7 @@ fn iter_files_impl(
 		.max_depth(depth)
 		.into_iter()
 		.filter_entry(move |e|
-			// if dir, check the exclude.
+			// If dir, check the exclude.
 			// Note: Important not to check the includes for directories, as they will always fail.
 			if e.file_type().is_dir() {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
@@ -50,9 +50,9 @@ fn iter_files_impl(
 					true
 				}
 			}
-			// else file, we apply the globs.
+			// Else file, we apply the globs.
 			else {
-				// first, evaluate the exclude.
+				// First, evaluate the exclude.
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
 					if exclude_globs.is_match(e.path()) {
 						return false;
@@ -62,7 +62,7 @@ fn iter_files_impl(
 				match include_globs.as_ref() {
 					Some(globs) => globs.is_match(e.path()),
 					None => true,
-    		}
+				}
 			}
 		)
 		.filter_map(|e| e.ok().filter(|e| e.file_type().is_file()));
@@ -85,16 +85,18 @@ mod tests {
 		let excludes = [
 			//
 			DEFAULT_EXCLUDE_GLOBS,
-			&["*.lock", "**/s*.rs"],
+			&["*.lock", "**/w*.rs"],
 		]
 		.concat();
 
-		// TODO: Implement more and complete tests.
+		// FIXME: See to have a bug here if `**/s*.rs`, all `src/...` will be excluded
 
-		let iter = iter_files("./", Some(&["**/"]), Some(&excludes))?;
+		// TODO: Implement more complete tests.
 
+		let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(&excludes))?;
+		let count = iter.count();
 		// Very trivial check.
-		assert_eq!(iter.count(), 6);
+		assert_eq!(count, 9);
 
 		Ok(())
 	}

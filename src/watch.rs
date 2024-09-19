@@ -46,7 +46,7 @@ impl From<notify::EventKind> for SEventKind {
 #[allow(unused)]
 pub struct SWatcher {
 	pub rx: Receiver<Vec<SEvent>>,
-	// Note: Here we keep the debouncer so that it is not drop and continue to run.
+	// Note: Here we keep the debouncer so that it is not dropped and continues to run.
 	notify_full_debouncer: Debouncer<RecommendedWatcher, FileIdMap>,
 }
 
@@ -54,8 +54,8 @@ pub struct SWatcher {
 
 /// Simplified watcher that monitors a path (file or directory) and returns a `SWatcher` object with a
 /// standard mpsc Receiver for a `Vec<SEvent>`.
-/// Each `SEvent` contains one `spath` and one simplified even kind ('SEventKind').
-/// This will ignore any path that can't to_str (i.e., only trigger events if valid utf8 path)
+/// Each `SEvent` contains one `spath` and one simplified event kind (`SEventKind`).
+/// This will ignore any path that can't be converted to a string (i.e., only trigger events if valid utf8 path)
 pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
 	let (tx, rx) = channel();
 
