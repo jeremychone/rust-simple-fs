@@ -1,22 +1,22 @@
 use crate::glob::{get_glob_set, DEFAULT_EXCLUDE_GLOBS};
-use crate::{Result, SFile};
+use crate::{ListOptions, Result, SFile};
 use std::path::Path;
 use walkdir::WalkDir;
 
 pub fn iter_files(
 	dir: impl AsRef<Path>,
 	include_globs: Option<&[&str]>,
-	exclude_globs: Option<&[&str]>,
+	list_options: Option<ListOptions<'_>>,
 ) -> Result<impl Iterator<Item = SFile>> {
-	iter_files_impl(dir.as_ref(), include_globs, exclude_globs)
+	iter_files_impl(dir.as_ref(), include_globs, list_options)
 }
 
 pub fn list_files(
 	dir: impl AsRef<Path>,
 	include_globs: Option<&[&str]>,
-	exclude_globs: Option<&[&str]>,
+	list_options: Option<ListOptions<'_>>,
 ) -> Result<Vec<SFile>> {
-	let sfiles_iter = iter_files_impl(dir.as_ref(), include_globs, exclude_globs)?;
+	let sfiles_iter = iter_files_impl(dir.as_ref(), include_globs, list_options)?;
 	Ok(sfiles_iter.collect())
 }
 
@@ -24,7 +24,7 @@ pub fn list_files(
 fn iter_files_impl(
 	dir: &Path,
 	include_globs: Option<&[&str]>,
-	exclude_globs: Option<&[&str]>,
+	list_options: Option<ListOptions<'_>>,
 ) -> Result<impl Iterator<Item = SFile>> {
 	// -- Determine recursive depth
 	let depth = include_globs
@@ -34,7 +34,14 @@ fn iter_files_impl(
 
 	// -- Prep globs
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
-	let exclude_globs = exclude_globs.or(Some(DEFAULT_EXCLUDE_GLOBS)).map(get_glob_set).transpose()?;
+	let exclude_globs: Option<&[&str]> = list_options
+		.as_ref() // Borrow list_options to ensure it stays valid
+		.and_then(|o| o.exclude_globs()); // No flatten needed as it's Option<&[&str]>
+
+	let exclude_globs = exclude_globs
+		.or(Some(DEFAULT_EXCLUDE_GLOBS)) // Use the static reference, no allocation
+		.map(get_glob_set) // Pass directly as &[&str]
+		.transpose()?;
 
 	// -- Build file iterator
 	let walk_dir_it = WalkDir::new(dir)
@@ -93,10 +100,10 @@ mod tests {
 
 		// TODO: Implement more complete tests.
 
-		let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(&excludes))?;
+		let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(excludes.into()))?;
 		let count = iter.count();
 		// Very trivial check.
-		assert_eq!(count, 9);
+		assert_eq!(count, 10);
 
 		Ok(())
 	}

@@ -1,6 +1,9 @@
 # simple-fs
 
+**IMPORTANT**: This crate is in early development, `0.1.z`, make sure to lock it to a specific version `=0.1.z`
+
 [simple-fs](https://github.com/jeremychone/rust-simple-fs) is a crate that provides a set of convenient and common file APIs built on `std::fs`, [walkdir](https://crates.io/crates/walkdir), and [globset](https://crates.io/crates/globset).
+
 
 ## Cargo Features
 
