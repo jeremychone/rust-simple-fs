@@ -96,7 +96,7 @@ mod tests {
 		]
 		.concat();
 
-		// FIXME: See to have a bug here if `**/s*.rs`, all `src/...` will be excluded
+		// FIXME: There seems to be a bug here if `**/s*.rs`, all `src/...` will be excluded
 
 		// TODO: Implement more complete tests.
 
