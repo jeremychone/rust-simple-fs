@@ -27,10 +27,8 @@ fn iter_files_impl(
 	list_options: Option<ListOptions<'_>>,
 ) -> Result<impl Iterator<Item = SFile>> {
 	// -- Determine recursive depth
-	let depth = include_globs
-		.map(|globs| globs.iter().any(|&g| g.contains("**")))
-		.map(|v| if v { 100 } else { 1 })
-		.unwrap_or(1);
+
+	let depth = include_globs.as_ref().map_or(1, |globs| get_depth(globs));
 
 	// -- Prep globs
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
@@ -52,7 +50,8 @@ fn iter_files_impl(
 			// Note: Important not to check the includes for directories, as they will always fail.
 			if e.file_type().is_dir() {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
-					!exclude_globs.is_match(e.path())
+					let do_not_exclude = !exclude_globs.is_match(e.path());
+					do_not_exclude
 				} else {
 					true
 				}
@@ -67,7 +66,10 @@ fn iter_files_impl(
 				}
 				// And then, evaluate the include.
 				match include_globs.as_ref() {
-					Some(globs) => globs.is_match(e.path()),
+					Some(globs) => {
+						let does_match = globs.is_match(e.path());
+						does_match
+					},
 					None => true,
 				}
 			}
@@ -79,6 +81,32 @@ fn iter_files_impl(
 	Ok(sfile_iter)
 }
 
+// region:    --- Support
+
+/// Determine the depth of the walk from the globs.
+///
+/// Rules:
+/// 1. If any glob contains "**", the depth is set to 100.
+/// 2. Otherwise, the depth is determined by the maximum number of path separators in the globs.
+///
+/// Note: Might not be perfect, but will fine tune later.
+fn get_depth(include_globs: &[&str]) -> usize {
+	let depth = include_globs.iter().fold(0, |acc, &g| {
+		if g.contains("**") {
+			return 100;
+		}
+		let sep_count = g.matches(std::path::MAIN_SEPARATOR).count();
+		if sep_count > acc {
+			sep_count
+		} else {
+			acc
+		}
+	});
+	depth.max(1)
+}
+
+// endregion: --- Support
+
 // region:    --- Tests
 
 #[cfg(test)]
@@ -88,7 +116,21 @@ mod tests {
 	type Result<T> = core::result::Result<T, Error>;
 
 	#[test]
-	fn test_iter_files_simple_ok() -> Result<()> {
+	fn test_iter_files_simple_glob_ok() -> Result<()> {
+		// TODO: Implement more complete tests.
+
+		// -- Exec
+		let iter = iter_files("./", Some(&["./src/s*.rs"]), None)?;
+
+		// -- Check
+		let count = iter.count();
+		assert_eq!(count, 2);
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_iter_files_nested_and_exclude_ok() -> Result<()> {
 		let excludes = [
 			//
 			DEFAULT_EXCLUDE_GLOBS,
