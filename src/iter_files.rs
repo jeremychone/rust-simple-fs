@@ -47,7 +47,7 @@ fn iter_files_impl(
 		.into_iter()
 		.filter_entry(move |e|
 			// If dir, check the exclude.
-			// Note: Important not to check the includes for directories, as they will always fail.
+			// Note: It is important not to check the includes for directories, as they will always fail.
 			if e.file_type().is_dir() {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
 					let do_not_exclude = !exclude_globs.is_match(e.path());
@@ -89,7 +89,7 @@ fn iter_files_impl(
 /// 1. If any glob contains "**", the depth is set to 100.
 /// 2. Otherwise, the depth is determined by the maximum number of path separators in the globs.
 ///
-/// Note: Might not be perfect, but will fine tune later.
+/// Note: It might not be perfect, but will fine-tune later.
 fn get_depth(include_globs: &[&str]) -> usize {
 	let depth = include_globs.iter().fold(0, |acc, &g| {
 		if g.contains("**") {
