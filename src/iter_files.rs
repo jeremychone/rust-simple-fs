@@ -20,7 +20,7 @@ pub fn list_files(
 	Ok(sfiles_iter.collect())
 }
 
-/// The implementation of the iter_files
+/// The implementation of the iter_files function.
 fn iter_files_impl(
 	dir: &Path,
 	include_globs: Option<&[&str]>,
@@ -30,7 +30,7 @@ fn iter_files_impl(
 
 	let depth = include_globs.as_ref().map_or(1, |globs| get_depth(globs));
 
-	// -- Prep globs
+	// -- Prepare globs
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
 	let exclude_globs: Option<&[&str]> = list_options
 		.as_ref() // Borrow list_options to ensure it stays valid
@@ -46,7 +46,7 @@ fn iter_files_impl(
 		.max_depth(depth)
 		.into_iter()
 		.filter_entry(move |e|
-			// If dir, check the exclude.
+			// If it's a directory, check the excludes.
 			// Note: It is important not to check the includes for directories, as they will always fail.
 			if e.file_type().is_dir() {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
@@ -56,15 +56,15 @@ fn iter_files_impl(
 					true
 				}
 			}
-			// Else file, we apply the globs.
+			// Else, for files, we apply the globs.
 			else {
-				// First, evaluate the exclude.
+				// First, evaluate the excludes.
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
 					if exclude_globs.is_match(e.path()) {
 						return false;
 					}
 				}
-				// And then, evaluate the include.
+				// Then, evaluate the includes.
 				match include_globs.as_ref() {
 					Some(globs) => {
 						let does_match = globs.is_match(e.path());
@@ -89,7 +89,7 @@ fn iter_files_impl(
 /// 1. If any glob contains "**", the depth is set to 100.
 /// 2. Otherwise, the depth is determined by the maximum number of path separators in the globs.
 ///
-/// Note: It might not be perfect, but will fine-tune later.
+/// Note: It might not be perfect, but we will fine-tune later.
 fn get_depth(include_globs: &[&str]) -> usize {
 	let depth = include_globs.iter().fold(0, |acc, &g| {
 		if g.contains("**") {
@@ -117,9 +117,9 @@ mod tests {
 
 	#[test]
 	fn test_iter_files_simple_glob_ok() -> Result<()> {
-		// TODO: Implement more complete tests.
+		// TODO: Implement more comprehensive tests.
 
-		// -- Exec
+		// -- Execute
 		let iter = iter_files("./", Some(&["./src/s*.rs"]), None)?;
 
 		// -- Check
@@ -138,9 +138,9 @@ mod tests {
 		]
 		.concat();
 
-		// FIXME: There seems to be a bug here if `**/s*.rs`, all `src/...` will be excluded
+		// FIXME: There seems to be a bug here if `**/s*.rs`, all `src/...` will be excluded.
 
-		// TODO: Implement more complete tests.
+		// TODO: Implement more comprehensive tests.
 
 		let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(excludes.into()))?;
 		let count = iter.count();

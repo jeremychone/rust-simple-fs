@@ -19,7 +19,7 @@ mod with_toml;
 
 pub use self::error::{Error, Result};
 
-// -- re-export all for root crate
+// -- re-export all for the root crate
 
 pub use dir::*;
 pub use file::*;

@@ -55,7 +55,7 @@ pub struct SWatcher {
 /// Simplified watcher that monitors a path (file or directory) and returns a `SWatcher` object with a
 /// standard mpsc Receiver for a `Vec<SEvent>`.
 /// Each `SEvent` contains one `spath` and one simplified event kind (`SEventKind`).
-/// This will ignore any path that can't be converted to a string (i.e., only trigger events if valid utf8 path)
+/// This will ignore any path that can't be converted to a string (i.e., only trigger events if the path is valid UTF-8)
 pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
 	let (tx, rx) = channel();
 
@@ -83,7 +83,7 @@ pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
 	Ok(swatcher)
 }
 
-/// Event Handler that propagates simplified Vec<SEvent>
+/// Event Handler that propagates a simplified Vec<SEvent>
 struct EventHandler {
 	tx: Sender<Vec<SEvent>>,
 }
@@ -124,7 +124,7 @@ fn build_sevents(events: Vec<DebouncedEvent>) -> Vec<SEvent> {
 					skind: skind.clone(),
 				};
 
-				// If this spath/skind is not in the set, then add to the sevents list
+				// If this spath/skind is not in the set, then add it to the sevents list
 				if !sevents_set.contains(&key) {
 					sevents.push(SEvent {
 						spath,

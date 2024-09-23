@@ -14,7 +14,7 @@ pub struct SPath {
 	path: PathBuf,
 }
 
-/// Constructors that guarantee the SPath contract described in the struct
+/// Constructor that guarantees the SPath contract described in the struct
 impl SPath {
 	/// Constructor for SPath accepting anything that implements Into<PathBuf>.
 	///
@@ -59,7 +59,7 @@ impl SPath {
 		})
 	}
 
-	/// Constructor from PathBuf returning an Option, none if validation fails.
+	/// Constructed from PathBuf returns an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		validate_spath_for_option(&path_buf)?;

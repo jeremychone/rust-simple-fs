@@ -34,7 +34,7 @@ impl SFile {
 	///
 	/// Returns Result<SFile>
 	///
-	/// Note: Prefer the use of the SPath::try_from(...) when available as it might
+	/// Note: Prefers the use of the SPath::try_from(...) when available as it might
 	///       avoid a PathBuf allocation.
 	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
 		let path = path.as_ref();
@@ -46,7 +46,7 @@ impl SFile {
 		})
 	}
 
-	/// Constructor for anything that impl AsRef<&Path>.
+	/// Constructors for anything that impl AsRef<&Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
 	///
@@ -61,7 +61,7 @@ impl SFile {
 		})
 	}
 
-	/// Constructor from PathBuf returning an Option, none if validation fails.
+	/// Constructors from PathBuf returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		validate_sfile_for_option(&path_buf)?;
@@ -116,7 +116,7 @@ impl SFile {
 		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
 	}
 
-	/// Returns the &str representation of the file_stem()
+	/// Returns the &str representation of the file_stem().
 	///
 	/// NOTE: According to the constructors' contract, this method will never return ""
 	///       as a file_name() is required for construction, and stem is always part of it.
@@ -137,7 +137,7 @@ impl SFile {
 		self.path.extension().and_then(|os_str| os_str.to_str())
 	}
 
-	/// Same as `.extension()` but returns "" if no extension
+	/// Same as `.extension()` but returns "" if no extension.
 	pub fn ext(&self) -> &str {
 		self.extension().unwrap_or_default()
 	}
