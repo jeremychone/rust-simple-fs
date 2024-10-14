@@ -148,6 +148,10 @@ impl SPath {
 		self.path.is_file()
 	}
 
+	pub fn exists(&self) -> bool {
+		self.path.exists()
+	}
+
 	// Returns the path.metadata modified.
 	pub fn modified(&self) -> Result<SystemTime> {
 		let path = self.path();
