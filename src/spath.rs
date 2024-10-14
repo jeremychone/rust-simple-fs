@@ -14,7 +14,7 @@ pub struct SPath {
 	path: PathBuf,
 }
 
-/// Constructor that guarantees the SPath contract described in the struct
+/// Constructors that guarantee the SPath contract described in the struct
 impl SPath {
 	/// Constructor for SPath accepting anything that implements Into<PathBuf>.
 	///
@@ -32,7 +32,7 @@ impl SPath {
 	///
 	/// Returns Result<SPath>
 	///
-	/// Note: Prefer the use of the SPath::try_from(...) when available as it might
+	/// Note: Prefer the use of the SPath::try_from(...) or new when available as it might
 	///       avoid a PathBuf allocation.
 	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
 		let path = path.as_ref();
@@ -85,7 +85,7 @@ impl SPath {
 	}
 }
 
-/// Public return Path constructs.
+/// Public into path
 impl SPath {
 	pub fn into_path_buf(self) -> PathBuf {
 		self.path
@@ -96,7 +96,7 @@ impl SPath {
 	}
 }
 
-/// Public file components as str methods.
+/// Public getters
 impl SPath {
 	/// Returns the &str of the path.
 	///
@@ -170,6 +170,18 @@ impl SPath {
 		let modified_us = since_the_epoch.as_micros().min(i64::MAX as u128) as i64;
 
 		Ok(modified_us)
+	}
+}
+
+/// Public utilities
+impl SPath {
+	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		let leaf_path = leaf_path.as_ref();
+
+		match self.path().parent() {
+			Some(parent_dir) => SPath::new(parent_dir.join(leaf_path)),
+			None => SPath::from_path(leaf_path),
+		}
 	}
 }
 
