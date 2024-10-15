@@ -11,7 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// - The entry is a file (exists).
 /// - It has a file name.
 /// - The full path is UTF-8 valid.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SFile {
 	path: PathBuf,
 }

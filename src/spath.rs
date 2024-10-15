@@ -9,7 +9,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 ///
 /// - The full path is UTF-8 valid.
 /// - It has a file name.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SPath {
 	path: PathBuf,
 }
