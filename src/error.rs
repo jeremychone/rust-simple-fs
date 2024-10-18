@@ -19,14 +19,14 @@ pub enum Error {
 	FileCantCreate(PathAndCause),
 	FileHasNoParent(String),
 
-	// -- Meta
+	// -- Metadata
 	CantGetMetadata(PathAndCause),
 	CantGetMetadataModified(PathAndCause),
 
 	// -- Time
 	CantGetDurationSystemTimeError(SystemTimeError),
 
-	// -- Dir
+	// -- Directory
 	DirCantCreateAll(PathAndCause),
 
 	// -- Path Validations
@@ -86,7 +86,7 @@ pub struct PathAndCause {
 
 // endregion: --- Cause Types
 
-// region:    --- Io
+// region:    --- IO
 
 impl From<(&Path, io::Error)> for PathAndCause {
 	fn from(val: (&Path, io::Error)) -> Self {
@@ -97,9 +97,9 @@ impl From<(&Path, io::Error)> for PathAndCause {
 	}
 }
 
-// endregion: --- Io
+// endregion: --- IO
 
-// region:    --- Json
+// region:    --- JSON
 
 #[cfg(feature = "with-json")]
 impl From<(&Path, serde_json::Error)> for PathAndCause {
@@ -111,9 +111,9 @@ impl From<(&Path, serde_json::Error)> for PathAndCause {
 	}
 }
 
-// endregion: --- Json
+// endregion: --- JSON
 
-// region:    --- Toml
+// region:    --- TOML
 
 #[cfg(feature = "with-toml")]
 impl From<(&Path, toml::de::Error)> for PathAndCause {
@@ -135,7 +135,7 @@ impl From<(&Path, toml::ser::Error)> for PathAndCause {
 	}
 }
 
-// endregion: --- Toml
+// endregion: --- TOML
 
 // region:    --- Error Boilerplate
 

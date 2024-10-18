@@ -44,7 +44,7 @@ impl SPath {
 		})
 	}
 
-	/// Constructor for anything that impl AsRef<Path>.
+	/// Constructor for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
 	///
@@ -301,3 +301,4 @@ pub(crate) fn validate_spath_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- Path Validation
+

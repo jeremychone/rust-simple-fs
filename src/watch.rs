@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
-// -- re-export some DebouncedEvent
+// -- Re-export some DebouncedEvent
 pub use notify_debouncer_full::DebouncedEvent;
 use std::collections::HashSet;
 
@@ -13,7 +13,7 @@ const WATCH_DEBOUNCE_MS: u64 = 200;
 
 // region:    --- SimpleEvent
 
-/// A greatly simplified file event struct, with only one path and one simplified event kind.
+/// A greatly simplified file event struct, containing only one path and one simplified event kind.
 /// Additionally, these will be debounced on top of the debouncer to ensure only one path/kind per debounced event list.
 #[derive(Debug)]
 pub struct SEvent {
@@ -46,16 +46,16 @@ impl From<notify::EventKind> for SEventKind {
 #[allow(unused)]
 pub struct SWatcher {
 	pub rx: Receiver<Vec<SEvent>>,
-	// Note: Here we keep the debouncer so that it is not dropped and continues to run.
+	// Note: Here we keep the debouncer so that it does not get dropped and continues to run.
 	notify_full_debouncer: Debouncer<RecommendedWatcher, FileIdMap>,
 }
 
 // endregion: --- SimpleEvent
 
-/// Simplified watcher that monitors a path (file or directory) and returns a `SWatcher` object with a
+/// A simplified watcher that monitors a path (file or directory) and returns an `SWatcher` object with a
 /// standard mpsc Receiver for a `Vec<SEvent>`.
 /// Each `SEvent` contains one `spath` and one simplified event kind (`SEventKind`).
-/// This will ignore any path that can't be converted to a string (i.e., only trigger events if the path is valid UTF-8)
+/// This will ignore any path that cannot be converted to a string (i.e., it will only trigger events if the path is valid UTF-8)
 pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
 	let (tx, rx) = channel();
 
@@ -97,7 +97,7 @@ impl DebounceEventHandler for EventHandler {
 					let _ = self.tx.send(sevents);
 				}
 			}
-			Err(err) => println!("simple-fs - handle_event error {err:?}"), // might want to trace
+			Err(err) => println!("simple-fs - handle_event error {err:?}"), // may want to trace
 		}
 	}
 }

@@ -34,7 +34,7 @@ impl SFile {
 	///
 	/// Returns Result<SFile>
 	///
-	/// Note: Prefers the use of the SPath::try_from(...) when available as it might
+	/// Note: Prefers the use of the SPath::try_from(...) when available, as it might
 	///       avoid a PathBuf allocation.
 	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
 		let path = path.as_ref();
@@ -46,7 +46,7 @@ impl SFile {
 		})
 	}
 
-	/// Constructors for anything that impl AsRef<&Path>.
+	/// Constructors for anything that implements AsRef<&Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
 	///
@@ -61,14 +61,14 @@ impl SFile {
 		})
 	}
 
-	/// Constructors from PathBuf returning an Option, none if validation fails.
+	/// Constructor from PathBuf returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		validate_sfile_for_option(&path_buf)?;
 		Some(Self { path: path_buf })
 	}
 
-	/// Constructor from fs::DirEntry returning an Option, none if validation fails.
+	/// Constructor from fs::DirEntry returning an Option; none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_fs_entry_ok(fs_entry: fs::DirEntry) -> Option<Self> {
 		let path_buf = fs_entry.path();
@@ -76,7 +76,7 @@ impl SFile {
 		Some(Self { path: path_buf })
 	}
 
-	/// Constructor from walkdir::DirEntry returning an Option, none if validation fails.
+	/// Constructor from walkdir::DirEntry returning an Option; none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_walkdir_entry_ok(wd_entry: walkdir::DirEntry) -> Option<Self> {
 		let path = wd_entry.path();
@@ -154,7 +154,7 @@ impl SFile {
 
 	/// Returns the epoch duration in microseconds.
 	/// Note: The maximum UTC date would be approximately `292277-01-09 04:00:54 UTC`.
-	///       Thus, for all intents and purposes, it is far enough to not worry.
+	///       Thus, for all intents and purposes, it is far enough not to worry.
 	pub fn modified_us(&self) -> Result<i64> {
 		let modified = self.modified()?;
 		let since_the_epoch = modified

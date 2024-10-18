@@ -5,7 +5,6 @@ pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 #[test]
 fn test_spath_new_sibling() -> Result<()> {
 	// -- Setup & Fixtures
-
 	let fx_data = &[
 		// (original_path, sibling_leaf_path, expected_path)
 		("/some/path/to/file.txt", "new_file.md", "/some/path/to/new_file.md"),

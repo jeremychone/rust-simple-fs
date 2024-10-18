@@ -33,7 +33,7 @@ fn iter_files_impl(
 	// -- Prepare globs
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
 	let exclude_globs: Option<&[&str]> = list_options
-		.as_ref() // Borrow list_options to ensure it stays valid
+		.as_ref() // Borrow list_options to ensure it remains valid
 		.and_then(|o| o.exclude_globs()); // No flatten needed as it's Option<&[&str]>
 
 	let exclude_globs = exclude_globs
@@ -89,7 +89,7 @@ fn iter_files_impl(
 /// 1. If any glob contains "**", the depth is set to 100.
 /// 2. Otherwise, the depth is determined by the maximum number of path separators in the globs.
 ///
-/// Note: It might not be perfect, but we will fine-tune later.
+/// Note: It might not be perfect, but we will fine-tune it later.
 fn get_depth(include_globs: &[&str]) -> usize {
 	let depth = include_globs.iter().fold(0, |acc, &g| {
 		if g.contains("**") {
@@ -152,3 +152,4 @@ mod tests {
 }
 
 // endregion: --- Tests
+
