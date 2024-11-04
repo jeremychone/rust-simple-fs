@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{Error, Result, SFile};
 use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -82,10 +82,6 @@ impl SPath {
 		Some(Self {
 			path: wd_entry.into_path(),
 		})
-	}
-
-	pub fn parent(&self) -> Option<SPath> {
-		self.path().parent().and_then(SPath::from_path_ok)
 	}
 }
 
@@ -179,10 +175,19 @@ impl SPath {
 
 		Ok(modified_us)
 	}
-}
 
-/// Public utilities
-impl SPath {
+	pub fn parent(&self) -> Option<SPath> {
+		self.path().parent().and_then(SPath::from_path_ok)
+	}
+
+	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		let leaf_path = leaf_path.as_ref();
+		let joined = self.path().join(leaf_path);
+		validate_spath_for_result(&joined)?;
+
+		Ok(SPath { path: joined })
+	}
+
 	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 
@@ -220,6 +225,27 @@ impl From<&SPath> for String {
 }
 
 // endregion: --- Std Traits Impls
+
+// region:    --- Froms
+
+impl From<SFile> for SPath {
+	fn from(sfile: SFile) -> Self {
+		SPath { path: sfile.into() }
+	}
+}
+
+impl From<SPath> for PathBuf {
+	fn from(val: SPath) -> Self {
+		val.into_path_buf()
+	}
+}
+
+impl From<&SPath> for PathBuf {
+	fn from(val: &SPath) -> Self {
+		val.path.clone()
+	}
+}
+// endregion: --- Froms
 
 // region:    --- TryFrom
 

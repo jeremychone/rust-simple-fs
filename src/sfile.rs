@@ -183,6 +183,21 @@ impl SFile {
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)
 	}
+
+	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		let leaf_path = leaf_path.as_ref();
+		let joined = self.path().join(leaf_path);
+		SPath::new(joined)
+	}
+
+	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		let leaf_path = leaf_path.as_ref();
+
+		match self.path().parent() {
+			Some(parent_dir) => SPath::new(parent_dir.join(leaf_path)),
+			None => SPath::from_path(leaf_path),
+		}
+	}
 }
 
 // region:    --- Std Traits Impls
@@ -199,6 +214,10 @@ impl fmt::Display for SFile {
 	}
 }
 
+// endregion: --- Std Traits Impls
+
+// region:    --- Froms
+
 impl From<SFile> for String {
 	fn from(val: SFile) -> Self {
 		val.to_str().to_string()
@@ -211,7 +230,19 @@ impl From<&SFile> for String {
 	}
 }
 
-// endregion: --- Std Traits Impls
+impl From<SFile> for PathBuf {
+	fn from(val: SFile) -> Self {
+		val.into_path_buf()
+	}
+}
+
+impl From<&SFile> for PathBuf {
+	fn from(val: &SFile) -> Self {
+		val.path.clone()
+	}
+}
+
+// endregion: --- Froms
 
 // region:    --- TryFroms
 
