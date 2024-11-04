@@ -83,6 +83,10 @@ impl SPath {
 			path: wd_entry.into_path(),
 		})
 	}
+
+	pub fn parent(&self) -> Option<SPath> {
+		self.path().parent().and_then(SPath::from_path_ok)
+	}
 }
 
 /// Public into path
@@ -301,4 +305,3 @@ pub(crate) fn validate_spath_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- Path Validation
-
