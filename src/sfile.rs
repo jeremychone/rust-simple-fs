@@ -89,10 +89,16 @@ impl SFile {
 
 /// Public return Path constructs.
 impl SFile {
+	/// Converts SFile into a PathBuf.
+	/// 
+	/// Takes ownership of the SFile and returns the underlying PathBuf.
 	pub fn into_path_buf(self) -> PathBuf {
 		self.path
 	}
 
+	/// Returns a reference to the Path.
+	///
+	/// Accesses the internal path of the SFile without transferring ownership.
 	pub fn path(&self) -> &Path {
 		&self.path
 	}
@@ -180,16 +186,26 @@ impl SFile {
 		Ok(size)
 	}
 
+	/// Returns the parent directory as SPath, if available.
+	/// 
+	/// If the SFile has a parent directory, converts it to SPath and returns.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)
 	}
 
+	/// Joins the current path with the specified leaf_path.
+	///
+	/// This method creates a new path by joining the existing path with a specified leaf_path
+	/// and returns the result as an SPath.
 	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 		let joined = self.path().join(leaf_path);
 		SPath::new(joined)
 	}
 
+	/// Creates a new sibling path with the specified leaf_path.
+	///
+	/// Generates a new path in the same parent directory as the current file, appending the leaf_path.
 	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 
@@ -342,3 +358,4 @@ fn validate_sfile_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- File Validation
+

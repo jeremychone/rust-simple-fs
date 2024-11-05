@@ -43,6 +43,7 @@ impl From<notify::EventKind> for SEventKind {
 	}
 }
 
+/// A simplified watcher struct containing a receiver for file system events and an internal debouncer.
 #[allow(unused)]
 pub struct SWatcher {
 	pub rx: Receiver<Vec<SEvent>>,

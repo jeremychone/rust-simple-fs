@@ -87,10 +87,12 @@ impl SPath {
 
 /// Public into path
 impl SPath {
+	/// Consumes the SPath and returns its PathBuf.
 	pub fn into_path_buf(self) -> PathBuf {
 		self.path
 	}
 
+	/// Returns a reference to the internal Path.
 	pub fn path(&self) -> &Path {
 		&self.path
 	}
@@ -140,19 +142,22 @@ impl SPath {
 		self.extension().unwrap_or_default()
 	}
 
+	/// Returns true if the path represents a directory.
 	pub fn is_dir(&self) -> bool {
 		self.path.is_dir()
 	}
 
+	/// Returns true if the path represents a file.
 	pub fn is_file(&self) -> bool {
 		self.path.is_file()
 	}
 
+	/// Checks if the path exists.
 	pub fn exists(&self) -> bool {
 		self.path.exists()
 	}
 
-	// Returns the path.metadata modified.
+	/// Returns the path.metadata modified.
 	pub fn modified(&self) -> Result<SystemTime> {
 		let path = self.path();
 		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
@@ -176,10 +181,12 @@ impl SPath {
 		Ok(modified_us)
 	}
 
+	/// Returns the parent directory as an Option<SPath>.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)
 	}
 
+	/// Joins the provided leaf_path with the current path and returns an SPath.
 	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 		let joined = self.path().join(leaf_path);
@@ -188,6 +195,7 @@ impl SPath {
 		Ok(SPath { path: joined })
 	}
 
+	/// Creates a new sibling SPath with the given leaf_path.
 	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 
