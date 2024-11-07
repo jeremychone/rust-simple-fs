@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// and guarantees the following:
 ///
 /// - The full path is UTF-8 valid.
-/// - It has a file name.
+/// - It does NOT have to have a file NAME (.e.g, './'). If no file_name, .file_name() will return ""
 #[derive(Debug, Clone)]
 pub struct SPath {
 	path: PathBuf,
@@ -108,25 +108,33 @@ impl SPath {
 		self.path.to_str().unwrap_or_default()
 	}
 
-	/// Returns the &str representation of the file_name()
+	/// Returns the Option<&str> representation of the `path.file_name()`
 	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction.
-	pub fn file_name(&self) -> &str {
-		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
+	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	///
+	pub fn file_name(&self) -> Option<&str> {
+		self.path.file_name().and_then(|n| n.to_str())
 	}
 
-	/// Returns the &str representation of the file_name()
+	/// Returns the &str representation of the `path.file_name()`
 	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction, and stem is always part of it.
-	pub fn file_stem(&self) -> &str {
-		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	pub fn name(&self) -> &str {
+		self.file_name().unwrap_or_default()
 	}
 
-	#[deprecated = "use file_stem(..)"]
+	/// Returns the Option<&str> representation of the file_stem()
+	///
+	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	pub fn file_stem(&self) -> Option<&str> {
+		self.path.file_stem().and_then(|n| n.to_str())
+	}
+
+	/// Returns the &str representation of the `file_name()`
+	///
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
 	pub fn stem(&self) -> &str {
-		self.file_stem()
+		self.file_stem().unwrap_or_default()
 	}
 
 	/// Returns the Option<&str> representation of the extension().
@@ -322,9 +330,6 @@ impl TryFrom<walkdir::DirEntry> for SPath {
 pub(crate) fn validate_spath_for_result(path: &Path) -> Result<()> {
 	if path.to_str().is_none() {
 		return Err(Error::PathNotUtf8(path.to_string_lossy().to_string()));
-	}
-	if path.file_name().is_none() {
-		return Err(Error::PathHasNoFileName(path.to_string_lossy().to_string()));
 	}
 
 	Ok(())

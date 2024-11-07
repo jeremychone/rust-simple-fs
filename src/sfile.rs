@@ -90,7 +90,7 @@ impl SFile {
 /// Public return Path constructs.
 impl SFile {
 	/// Converts SFile into a PathBuf.
-	/// 
+	///
 	/// Takes ownership of the SFile and returns the underlying PathBuf.
 	pub fn into_path_buf(self) -> PathBuf {
 		self.path
@@ -114,25 +114,33 @@ impl SFile {
 		self.path.to_str().unwrap_or_default()
 	}
 
-	/// Returns the &str representation of the file_name()
+	/// Returns the Option<&str> representation of the `path.file_name()`
 	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction.
-	pub fn file_name(&self) -> &str {
-		self.path.file_name().and_then(|n| n.to_str()).unwrap_or_default()
+	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	///
+	pub fn file_name(&self) -> Option<&str> {
+		self.path.file_name().and_then(|n| n.to_str())
 	}
 
-	/// Returns the &str representation of the file_stem().
+	/// Returns the &str representation of the `path.file_name()`
 	///
-	/// NOTE: According to the constructors' contract, this method will never return ""
-	///       as a file_name() is required for construction, and stem is always part of it.
-	pub fn file_stem(&self) -> &str {
-		self.path.file_stem().and_then(|n| n.to_str()).unwrap_or_default()
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	pub fn name(&self) -> &str {
+		self.file_name().unwrap_or_default()
 	}
 
-	#[deprecated = "use file_stem(..)"]
+	/// Returns the Option<&str> representation of the file_stem()
+	///
+	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	pub fn file_stem(&self) -> Option<&str> {
+		self.path.file_stem().and_then(|n| n.to_str())
+	}
+
+	/// Returns the &str representation of the `file_name()`
+	///
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
 	pub fn stem(&self) -> &str {
-		self.file_stem()
+		self.file_stem().unwrap_or_default()
 	}
 
 	/// Returns the Option<&str> representation of the extension().
@@ -187,7 +195,7 @@ impl SFile {
 	}
 
 	/// Returns the parent directory as SPath, if available.
-	/// 
+	///
 	/// If the SFile has a parent directory, converts it to SPath and returns.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)
@@ -358,4 +366,3 @@ fn validate_sfile_for_option(path: &Path) -> Option<()> {
 }
 
 // endregion: --- File Validation
-

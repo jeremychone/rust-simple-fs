@@ -1,7 +1,5 @@
 # simple-fs
 
-**IMPORTANT**: This crate is in early development, `0.1.z`, make sure to lock it to a specific version `=0.1.z`
-
 [simple-fs](https://github.com/jeremychone/rust-simple-fs) is a crate that provides a set of convenient and common file APIs built on `std::fs`, [walkdir](https://crates.io/crates/walkdir), and [globset](https://crates.io/crates/globset).
 
 
@@ -14,6 +12,10 @@
 | `bin-nums`  | `save_be_f64`, `load_be_f64`, `save_le_f64`, ... |
 | `full`      | All the above.                                   |
 | default     | None of the above. See below.                    |
+
+## API Change `0.2.0` from `0.1.x`
+
+- API CHANGE - now .file_name() and .file_stem() returns Option<&str> use .name(), .stem() to have &str
 
 ## Concept 
 
