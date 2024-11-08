@@ -193,6 +193,14 @@ impl SPath {
 
 /// Transformers
 impl SPath {
+	pub fn canonicalize(&self) -> Result<SPath> {
+		let path = self
+			.path_buf
+			.canonicalize()
+			.map_err(|err| Error::CannotCanonicalize((self.path(), err).into()))?;
+		SPath::new(path)
+	}
+
 	/// Returns the parent directory as an Option<SPath>.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)

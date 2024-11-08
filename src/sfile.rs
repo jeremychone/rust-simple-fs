@@ -179,7 +179,15 @@ impl SFile {
 	}
 }
 
+/// Transformers
 impl SFile {
+	pub fn canonicalize(&self) -> Result<SFile> {
+		let path = self.path.canonicalize()?;
+		// Note: here since the previous pas was value, if the spath canonicalize passes,
+		//       we are ok.
+		Ok(SFile { path })
+	}
+
 	/// Returns the parent directory as SPath, if available.
 	///
 	/// If the SFile has a parent directory, converts it to SPath and returns.

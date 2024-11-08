@@ -54,6 +54,7 @@ pub enum Error {
 		path: String,
 		base: String,
 	},
+	CannotCanonicalize(PathAndCause),
 
 	// -- with-json
 	#[cfg(feature = "with-json")]
