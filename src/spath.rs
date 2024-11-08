@@ -1,5 +1,6 @@
 use crate::{Error, Result, SFile};
 use core::fmt;
+use pathdiff::diff_paths;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -11,7 +12,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// - It does NOT have to have a file NAME (.e.g, './'). If no file_name, .file_name() will return ""
 #[derive(Debug, Clone)]
 pub struct SPath {
-	path: PathBuf,
+	pub(crate) path: PathBuf,
 }
 
 /// Constructors that guarantee the SPath contract described in the struct
@@ -188,7 +189,10 @@ impl SPath {
 
 		Ok(modified_us)
 	}
+}
 
+/// Transformers
+impl SPath {
 	/// Returns the parent directory as an Option<SPath>.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path().parent().and_then(SPath::from_path_ok)
@@ -211,6 +215,29 @@ impl SPath {
 			Some(parent_dir) => SPath::new(parent_dir.join(leaf_path)),
 			None => SPath::from_path(leaf_path),
 		}
+	}
+
+	// Return a clean version of the path (meaning resolve the "../../")
+	// Note: This does not resolve the path to the file system.
+	//       So safe to use on non existant path.
+	pub fn clean(&self) -> SPath {
+		let path_buf = path_clean::clean(self);
+		// Note: Here we can assume the result PathBuf is UTF8 compatible
+		//       So, return empty Path cannot make it a spath
+		SPath::from_path_buf_ok(path_buf).unwrap_or_else(|| SPath {
+			path: Path::new("").into(),
+		})
+	}
+
+	pub fn diff(&self, base: impl AsRef<Path>) -> Result<SPath> {
+		let base = base.as_ref();
+
+		let diff_path = diff_paths(self, base).ok_or_else(|| Error::CannotDiff {
+			path: self.to_string(),
+			base: base.to_string_lossy().to_string(),
+		})?;
+
+		SPath::new(diff_path)
 	}
 }
 
@@ -338,7 +365,6 @@ pub(crate) fn validate_spath_for_result(path: &Path) -> Result<()> {
 /// Validate but without generating an error (good for the _ok constructors)
 pub(crate) fn validate_spath_for_option(path: &Path) -> Option<()> {
 	path.to_str()?;
-	path.file_name()?;
 
 	Some(())
 }

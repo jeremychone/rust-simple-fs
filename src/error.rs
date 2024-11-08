@@ -49,6 +49,12 @@ pub enum Error {
 	},
 	CantWatchPathNotFound(String),
 
+	// -- Other
+	CannotDiff {
+		path: String,
+		base: String,
+	},
+
 	// -- with-json
 	#[cfg(feature = "with-json")]
 	JsonCantRead(PathAndCause),

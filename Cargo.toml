@@ -42,3 +42,4 @@ toml = { version = "0.8", optional = true}
 # -- Features: bin-nums
 byteorder = { version = "1.5", optional = true}
 pathdiff = "0.2.2"
+path-clean = "1.0.1"

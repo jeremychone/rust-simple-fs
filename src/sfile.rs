@@ -1,6 +1,7 @@
 use crate::{validate_spath_for_option, validate_spath_for_result, SPath};
 use crate::{Error, Result};
 use core::fmt;
+use pathdiff::diff_paths;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -193,7 +194,9 @@ impl SFile {
 		};
 		Ok(size)
 	}
+}
 
+impl SFile {
 	/// Returns the parent directory as SPath, if available.
 	///
 	/// If the SFile has a parent directory, converts it to SPath and returns.
@@ -222,8 +225,30 @@ impl SFile {
 			None => SPath::from_path(leaf_path),
 		}
 	}
-}
 
+	// Return a clean version of the path (meaning resolve the "../../")
+	// Note: This does not resolve the path to the file system.
+	//       So safe to use on non existant path.
+	pub fn clean(&self) -> SPath {
+		let path_buf = path_clean::clean(self);
+		// Note: Here we can assume the result PathBuf is UTF8 compatible
+		//       So, return empty Path cannot make it a spath
+		SPath::from_path_buf_ok(path_buf).unwrap_or_else(|| SPath {
+			path: Path::new("").into(),
+		})
+	}
+
+	pub fn diff(&self, base: impl AsRef<Path>) -> Result<SPath> {
+		let base = base.as_ref();
+
+		let diff_path = diff_paths(self, base).ok_or_else(|| Error::CannotDiff {
+			path: self.to_string(),
+			base: base.to_string_lossy().to_string(),
+		})?;
+
+		SPath::new(diff_path)
+	}
+}
 // region:    --- Std Traits Impls
 
 impl AsRef<Path> for SFile {

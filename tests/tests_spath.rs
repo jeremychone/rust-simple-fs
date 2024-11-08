@@ -27,3 +27,39 @@ fn test_spath_new_sibling() -> Result<()> {
 
 	Ok(())
 }
+
+#[test]
+fn test_spath_diff() -> Result<()> {
+	// -- Setup & Fixtures
+	let fx_data = &[
+		// (base_path, target_path, expected_path)
+		(
+			"/some/base/path",
+			"/some/base/path/sub_dir/some_file.md",
+			"sub_dir/some_file.md",
+		),
+		(
+			"/some/base/path/sub_dir/some_file.md",
+			"/some/base/path/some/other-file.md",
+			"sub_dir/some_file.md",
+		),
+	];
+
+	// -- Exec & Check
+	for data in fx_data.iter() {
+		println!();
+		let base_path = SPath::new(data.0)?;
+		let target_path = SPath::new(data.1)?;
+		// let expected_path = SPath::new(data.2)?;
+
+		let diff_path = target_path.diff(&base_path)?;
+		println!("->>   base: {}", base_path);
+		println!("->> target: {}", target_path);
+		println!("->>   diff: {}", diff_path);
+		let re = base_path.join(diff_path)?;
+		println!("->>     re: {}", re);
+		println!("->>  clean: {}", re.clean());
+	}
+
+	Ok(())
+}
