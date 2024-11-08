@@ -1,5 +1,5 @@
 use crate::{Error, Result, SPath};
-use notify::{self, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{self, RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::{new_debouncer, DebounceEventHandler, DebounceEventResult, Debouncer, FileIdMap};
 use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -60,16 +60,19 @@ pub struct SWatcher {
 pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
 	let (tx, rx) = channel();
 
-	let handler = EventHandler { tx };
-	let mut debouncer = new_debouncer(Duration::from_millis(WATCH_DEBOUNCE_MS), None, handler).unwrap();
-	let watcher = debouncer.watcher();
 	let path = path.as_ref();
+	let handler = EventHandler { tx };
+	let mut debouncer =
+		new_debouncer(Duration::from_millis(WATCH_DEBOUNCE_MS), None, handler).map_err(|err| Error::FailToWatch {
+			path: path.to_string_lossy().to_string(),
+			cause: err.to_string(),
+		})?;
 
 	if !path.exists() {
 		return Err(Error::CantWatchPathNotFound(path.to_string_lossy().to_string()));
 	}
 
-	watcher
+	debouncer
 		.watch(path, RecursiveMode::Recursive)
 		.map_err(|err| Error::FailToWatch {
 			path: path.to_string_lossy().to_string(),

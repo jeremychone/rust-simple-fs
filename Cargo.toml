@@ -29,11 +29,10 @@ unsafe_code = "forbid"
 # -- Files
 walkdir = "2"
 globset = "0.4"
-notify = "6"
-notify-debouncer-full = "0.3"
+notify = "7"
+notify-debouncer-full = "0.4"
 # -- Other
 derive_more = {version = "1.0.0-beta", features = ["from"] }
-
 # -- Feature: json, toml
 serde = { version = "1", features = ["derive"], optional = true}
 # -- Feature: json
@@ -42,3 +41,4 @@ serde_json = { version = "1", optional = true}
 toml = { version = "0.8", optional = true}
 # -- Features: bin-nums
 byteorder = { version = "1.5", optional = true}
+pathdiff = "0.2.2"
