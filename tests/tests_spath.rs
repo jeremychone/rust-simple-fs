@@ -41,7 +41,7 @@ fn test_spath_diff() -> Result<()> {
 		(
 			"/some/base/path/sub_dir/some_file.md",
 			"/some/base/path/some/other-file.md",
-			"sub_dir/some_file.md",
+			"../../some/other-file.md",
 		),
 	];
 
@@ -50,15 +50,13 @@ fn test_spath_diff() -> Result<()> {
 		println!();
 		let base_path = SPath::new(data.0)?;
 		let target_path = SPath::new(data.1)?;
-		// let expected_path = SPath::new(data.2)?;
+		let expected_path = SPath::new(data.2)?;
 
 		let diff_path = target_path.diff(&base_path)?;
-		println!("->>   base: {}", base_path);
-		println!("->> target: {}", target_path);
-		println!("->>   diff: {}", diff_path);
-		let re = base_path.join(diff_path)?;
-		println!("->>     re: {}", re);
-		println!("->>  clean: {}", re.clean());
+		let rejoined_path = base_path.join(&diff_path)?;
+
+		assert_eq!(diff_path.to_str(), expected_path.to_str());
+		assert_eq!(rejoined_path.to_str(), target_path.to_str());
 	}
 
 	Ok(())

@@ -12,7 +12,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// - It does NOT have to have a file NAME (.e.g, './'). If no file_name, .file_name() will return ""
 #[derive(Debug, Clone)]
 pub struct SPath {
-	pub(crate) path: PathBuf,
+	pub(crate) path_buf: PathBuf,
 }
 
 /// Constructors that guarantee the SPath contract described in the struct
@@ -26,7 +26,7 @@ impl SPath {
 
 		validate_spath_for_result(&path)?;
 
-		Ok(Self { path })
+		Ok(Self { path_buf: path })
 	}
 
 	/// Constructor from Path and all impl AsRef<Path>.
@@ -41,7 +41,7 @@ impl SPath {
 		validate_spath_for_result(path)?;
 
 		Ok(Self {
-			path: path.to_path_buf(),
+			path_buf: path.to_path_buf(),
 		})
 	}
 
@@ -56,7 +56,7 @@ impl SPath {
 		validate_spath_for_option(path)?;
 
 		Some(Self {
-			path: path.to_path_buf(),
+			path_buf: path.to_path_buf(),
 		})
 	}
 
@@ -64,7 +64,7 @@ impl SPath {
 	/// Useful for filter_map.
 	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		validate_spath_for_option(&path_buf)?;
-		Some(Self { path: path_buf })
+		Some(Self { path_buf })
 	}
 
 	/// Constructor from fs::DirEntry returning an Option, none if validation fails.
@@ -72,7 +72,7 @@ impl SPath {
 	pub fn from_fs_entry_ok(fs_entry: fs::DirEntry) -> Option<Self> {
 		let path_buf = fs_entry.path();
 		validate_spath_for_option(&path_buf)?;
-		Some(Self { path: path_buf })
+		Some(Self { path_buf })
 	}
 
 	/// Constructor from walkdir::DirEntry returning an Option, none if validation fails.
@@ -81,7 +81,7 @@ impl SPath {
 		let path = wd_entry.path();
 		validate_spath_for_option(path)?;
 		Some(Self {
-			path: wd_entry.into_path(),
+			path_buf: wd_entry.into_path(),
 		})
 	}
 }
@@ -90,12 +90,12 @@ impl SPath {
 impl SPath {
 	/// Consumes the SPath and returns its PathBuf.
 	pub fn into_path_buf(self) -> PathBuf {
-		self.path
+		self.path_buf
 	}
 
 	/// Returns a reference to the internal Path.
 	pub fn path(&self) -> &Path {
-		&self.path
+		&self.path_buf
 	}
 }
 
@@ -106,7 +106,7 @@ impl SPath {
 	/// NOTE: We know that this must be Some() since the SPath constructor guarantees that
 	///       the path.to_str() is valid.
 	pub fn to_str(&self) -> &str {
-		self.path.to_str().unwrap_or_default()
+		self.path_buf.to_str().unwrap_or_default()
 	}
 
 	/// Returns the Option<&str> representation of the `path.file_name()`
@@ -114,7 +114,7 @@ impl SPath {
 	/// Note: if the `OsStr` cannot be made into utf8 will be None
 	///
 	pub fn file_name(&self) -> Option<&str> {
-		self.path.file_name().and_then(|n| n.to_str())
+		self.path_buf.file_name().and_then(|n| n.to_str())
 	}
 
 	/// Returns the &str representation of the `path.file_name()`
@@ -128,7 +128,7 @@ impl SPath {
 	///
 	/// Note: if the `OsStr` cannot be made into utf8 will be None
 	pub fn file_stem(&self) -> Option<&str> {
-		self.path.file_stem().and_then(|n| n.to_str())
+		self.path_buf.file_stem().and_then(|n| n.to_str())
 	}
 
 	/// Returns the &str representation of the `file_name()`
@@ -143,7 +143,7 @@ impl SPath {
 	/// NOTE: This should never be a non-UTF-8 string
 	///       as the path was validated during SPath construction.
 	pub fn extension(&self) -> Option<&str> {
-		self.path.extension().and_then(|os_str| os_str.to_str())
+		self.path_buf.extension().and_then(|os_str| os_str.to_str())
 	}
 
 	/// Returns the extension or "" if no extension
@@ -153,17 +153,17 @@ impl SPath {
 
 	/// Returns true if the path represents a directory.
 	pub fn is_dir(&self) -> bool {
-		self.path.is_dir()
+		self.path_buf.is_dir()
 	}
 
 	/// Returns true if the path represents a file.
 	pub fn is_file(&self) -> bool {
-		self.path.is_file()
+		self.path_buf.is_file()
 	}
 
 	/// Checks if the path exists.
 	pub fn exists(&self) -> bool {
-		self.path.exists()
+		self.path_buf.exists()
 	}
 
 	/// Returns the path.metadata modified.
@@ -204,7 +204,7 @@ impl SPath {
 		let joined = self.path().join(leaf_path);
 		validate_spath_for_result(&joined)?;
 
-		Ok(SPath { path: joined })
+		Ok(SPath { path_buf: joined })
 	}
 
 	/// Creates a new sibling SPath with the given leaf_path.
@@ -225,7 +225,7 @@ impl SPath {
 		// Note: Here we can assume the result PathBuf is UTF8 compatible
 		//       So, return empty Path cannot make it a spath
 		SPath::from_path_buf_ok(path_buf).unwrap_or_else(|| SPath {
-			path: Path::new("").into(),
+			path_buf: Path::new("").into(),
 		})
 	}
 
@@ -245,7 +245,7 @@ impl SPath {
 
 impl AsRef<Path> for SPath {
 	fn as_ref(&self) -> &Path {
-		self.path.as_ref()
+		self.path_buf.as_ref()
 	}
 }
 
@@ -273,7 +273,7 @@ impl From<&SPath> for String {
 
 impl From<SFile> for SPath {
 	fn from(sfile: SFile) -> Self {
-		SPath { path: sfile.into() }
+		SPath { path_buf: sfile.into() }
 	}
 }
 
@@ -285,7 +285,7 @@ impl From<SPath> for PathBuf {
 
 impl From<&SPath> for PathBuf {
 	fn from(val: &SPath) -> Self {
-		val.path.clone()
+		val.path_buf.clone()
 	}
 }
 // endregion: --- Froms
@@ -299,7 +299,7 @@ impl TryFrom<&str> for SPath {
 		validate_spath_for_result(path)?;
 
 		Ok(Self {
-			path: path.to_path_buf(),
+			path_buf: path.to_path_buf(),
 		})
 	}
 }
@@ -323,7 +323,7 @@ impl TryFrom<PathBuf> for SPath {
 	fn try_from(path_buf: PathBuf) -> Result<SPath> {
 		validate_spath_for_result(&path_buf)?;
 
-		Ok(Self { path: path_buf })
+		Ok(Self { path_buf })
 	}
 }
 
@@ -333,7 +333,7 @@ impl TryFrom<fs::DirEntry> for SPath {
 		let path_buf = fs_entry.path();
 		validate_spath_for_result(&path_buf)?;
 
-		Ok(Self { path: path_buf })
+		Ok(Self { path_buf })
 	}
 }
 
@@ -345,7 +345,7 @@ impl TryFrom<walkdir::DirEntry> for SPath {
 		validate_spath_for_result(path)?;
 
 		Ok(Self {
-			path: wd_entry.into_path(),
+			path_buf: wd_entry.into_path(),
 		})
 	}
 }
