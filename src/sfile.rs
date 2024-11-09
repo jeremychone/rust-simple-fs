@@ -44,6 +44,13 @@ impl SFile {
 		Ok(Self { path })
 	}
 
+	/// Constructor from walkdir::DirEntry
+	pub fn from_walkdir_entry(wd_entry: walkdir::DirEntry) -> Result<Self> {
+		let path = SPath::from_walkdir_entry(wd_entry)?;
+		validate_sfile_for_result(&path)?;
+		Ok(Self { path })
+	}
+
 	/// Constructors for anything that implements AsRef<&Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.

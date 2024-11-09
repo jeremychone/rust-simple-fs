@@ -1,6 +1,7 @@
 use crate::glob::{get_glob_set, DEFAULT_EXCLUDE_GLOBS};
-use crate::{ListOptions, Result, SFile};
+use crate::{ListOptions, Result, SFile, SPath};
 use std::path::Path;
+use std::sync::Arc;
 use walkdir::WalkDir;
 
 pub fn iter_files(
@@ -26,11 +27,15 @@ fn iter_files_impl(
 	include_globs: Option<&[&str]>,
 	list_options: Option<ListOptions<'_>>,
 ) -> Result<impl Iterator<Item = SFile>> {
-	// -- Determine recursive depth
+	let ref_dir = Arc::new(SPath::from_path(dir)?);
 
+	// -- Determine recursive depth
 	let depth = include_globs.as_ref().map_or(1, |globs| get_depth(globs));
 
 	// -- Prepare globs
+	// will default to false
+	let dir_relative = list_options.as_ref().map(|l| l.relative_glob).unwrap_or_default();
+
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
 	let exclude_globs: Option<&[&str]> = list_options
 		.as_ref() // Borrow list_options to ensure it remains valid
@@ -42,16 +47,33 @@ fn iter_files_impl(
 		.transpose()?;
 
 	// -- Build file iterator
-	let walk_dir_it = WalkDir::new(dir)
+	let dir = ref_dir.clone();
+	let walk_dir_it = WalkDir::new(&*dir)
 		.max_depth(depth)
 		.into_iter()
-		.filter_entry(move |e|
+		.filter_entry(move |e| {
+			// This use the walkdir file_type which does not make a system call
+			let is_dir = e.file_type().is_dir();
+
+			let Ok(path) = SPath::from_path(e.path()) else {
+				return false;
+			};
+
+			let path = if dir_relative {
+				let Ok(path) = path.diff(&*dir) else {
+					return false;
+				};
+				path
+			} else {
+				path
+			};
+
 			// If it's a directory, check the excludes.
-			// Note: It is important not to check the includes for directories, as they will always fail.
-			if e.file_type().is_dir() {
+
+			// NOTE 1: It is important not to glob check the includes for directories, as they will always fail.
+			if is_dir {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
-					let do_not_exclude = !exclude_globs.is_match(e.path());
-					do_not_exclude
+					!exclude_globs.is_match(path)
 				} else {
 					true
 				}
@@ -60,25 +82,28 @@ fn iter_files_impl(
 			else {
 				// First, evaluate the excludes.
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
-					if exclude_globs.is_match(e.path()) {
+					if exclude_globs.is_match(&path) {
 						return false;
 					}
 				}
 				// Then, evaluate the includes.
 				match include_globs.as_ref() {
-					Some(globs) => {
-						let does_match = globs.is_match(e.path());
-						does_match
-					},
+					Some(globs) => globs.is_match(&path),
 					None => true,
 				}
 			}
-		)
+		})
+		// only take ok entry, thta are file
 		.filter_map(|e| e.ok().filter(|e| e.file_type().is_file()));
 
-	let sfile_iter = walk_dir_it.filter_map(SFile::from_walkdir_entry_ok);
+	// now, the final iteration
+	// TODO: Here we could do an optimization if SFile would allow a backdoor for setting the path,
+	//       as we know it is a file.
+	// IMPORTANT: Here we will have the path including the "dir", meaning relative to current_dir, so that it can be loaded
+	//            Otherwise, it would not be valid path to load.
+	let walk_dir_it = walk_dir_it.filter_map(SFile::from_walkdir_entry_ok);
 
-	Ok(sfile_iter)
+	Ok(walk_dir_it)
 }
 
 // region:    --- Support
@@ -91,11 +116,11 @@ fn iter_files_impl(
 ///
 /// Note: It might not be perfect, but we will fine-tune it later.
 fn get_depth(include_globs: &[&str]) -> usize {
-	let depth = include_globs.iter().fold(0, |acc, &g| {
+	let depth = include_globs.iter().fold(1, |acc, &g| {
 		if g.contains("**") {
 			return 100;
 		}
-		let sep_count = g.matches(std::path::MAIN_SEPARATOR).count();
+		let sep_count = g.matches(std::path::MAIN_SEPARATOR).count() + 1;
 		if sep_count > acc {
 			sep_count
 		} else {
@@ -152,4 +177,3 @@ mod tests {
 }
 
 // endregion: --- Tests
-

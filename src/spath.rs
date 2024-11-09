@@ -45,6 +45,15 @@ impl SPath {
 		})
 	}
 
+	/// Constructor from walkdir::DirEntry
+	pub fn from_walkdir_entry(wd_entry: walkdir::DirEntry) -> Result<Self> {
+		let path = wd_entry.path();
+		validate_spath_for_result(path)?;
+		Ok(Self {
+			path_buf: wd_entry.into_path(),
+		})
+	}
+
 	/// Constructor for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
