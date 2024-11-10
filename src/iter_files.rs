@@ -52,7 +52,7 @@ fn iter_files_impl(
 		.max_depth(depth)
 		.into_iter()
 		.filter_entry(move |e| {
-			// This use the walkdir file_type which does not make a system call
+			// This uses the walkdir file_type which does not make a system call
 			let is_dir = e.file_type().is_dir();
 
 			let Ok(path) = SPath::from_path(e.path()) else {
@@ -93,14 +93,14 @@ fn iter_files_impl(
 				}
 			}
 		})
-		// only take ok entry, thta are file
+		// only take ok entry that are files
 		.filter_map(|e| e.ok().filter(|e| e.file_type().is_file()));
 
-	// now, the final iteration
+	// Now, the final iteration
 	// TODO: Here we could do an optimization if SFile would allow a backdoor for setting the path,
 	//       as we know it is a file.
-	// IMPORTANT: Here we will have the path including the "dir", meaning relative to current_dir, so that it can be loaded
-	//            Otherwise, it would not be valid path to load.
+	// IMPORTANT: Here we will have the path including the "dir", meaning relative to current_dir, so that it can be loaded.
+	//            Otherwise, it would not be a valid path to load.
 	let walk_dir_it = walk_dir_it.filter_map(SFile::from_walkdir_entry_ok);
 
 	Ok(walk_dir_it)

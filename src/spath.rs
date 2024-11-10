@@ -9,7 +9,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// and guarantees the following:
 ///
 /// - The full path is UTF-8 valid.
-/// - It does NOT have to have a file NAME (.e.g, './'). If no file_name, .file_name() will return ""
+/// - It does NOT have to have a file NAME (e.g., './'). If no file_name, .file_name() will return ""
 #[derive(Debug, Clone)]
 pub struct SPath {
 	pub(crate) path_buf: PathBuf,
@@ -128,7 +128,7 @@ impl SPath {
 
 	/// Returns the &str representation of the `path.file_name()`
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be an empty string
 	pub fn name(&self) -> &str {
 		self.file_name().unwrap_or_default()
 	}
@@ -142,7 +142,7 @@ impl SPath {
 
 	/// Returns the &str representation of the `file_name()`
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be an empty string
 	pub fn stem(&self) -> &str {
 		self.file_stem().unwrap_or_default()
 	}
@@ -236,7 +236,7 @@ impl SPath {
 
 	// Return a clean version of the path (meaning resolve the "../../")
 	// Note: This does not resolve the path to the file system.
-	//       So safe to use on non existant path.
+	//       So safe to use on a non existent path.
 	pub fn clean(&self) -> SPath {
 		let path_buf = path_clean::clean(self);
 		// Note: Here we can assume the result PathBuf is UTF8 compatible

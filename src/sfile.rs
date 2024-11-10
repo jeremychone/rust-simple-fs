@@ -117,31 +117,31 @@ impl SFile {
 		self.path.to_str()
 	}
 
-	/// Returns the Option<&str> representation of the `path.file_name()`
+	/// Returns the Option<&str> representation of the `path.file_name()`.
 	///
-	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	/// Note: if the `OsStr` cannot be made into UTF-8, will be None.
 	///
 	pub fn file_name(&self) -> Option<&str> {
 		self.path.file_name()
 	}
 
-	/// Returns the &str representation of the `path.file_name()`
+	/// Returns the &str representation of the `path.file_name()`.
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	/// Note: If no file name (e.g., `./`) or `OsStr` is not UTF-8, will be an empty string
 	pub fn name(&self) -> &str {
 		self.file_name().unwrap_or_default()
 	}
 
-	/// Returns the Option<&str> representation of the file_stem()
+	/// Returns the Option<&str> representation of the file_stem().
 	///
-	/// Note: if the `OsStr` cannot be made into utf8 will be None
+	/// Note: if the `OsStr` cannot be made into UTF-8, will be None.
 	pub fn file_stem(&self) -> Option<&str> {
 		self.path.file_stem()
 	}
 
-	/// Returns the &str representation of the `file_name()`
+	/// Returns the &str representation of the `file_name()`.
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` no utf8, will be empty string
+	/// Note: If no file name (e.g., `./`) or `OsStr` is not UTF-8, will be an empty string
 	pub fn stem(&self) -> &str {
 		self.path.stem()
 	}
@@ -190,14 +190,14 @@ impl SFile {
 impl SFile {
 	pub fn canonicalize(&self) -> Result<SFile> {
 		let path = self.path.canonicalize()?;
-		// Note: here since the previous pas was value, if the spath canonicalize passes,
+		// Note: here since the previous path was valid, if the spath canonicalization passes,
 		//       we are ok.
 		Ok(SFile { path })
 	}
 
 	/// Returns the parent directory as SPath, if available.
 	///
-	/// If the SFile has a parent directory, converts it to SPath and returns.
+	/// If the SFile has a parent directory, converts it to SPath and returns it.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path.parent()
 	}
@@ -217,9 +217,9 @@ impl SFile {
 		self.path.new_sibling(leaf_path)
 	}
 
-	// Return a clean version of the path (meaning resolve the "../../")
+	// Return a clean version of the path (meaning resolve the "../../").
 	// Note: This does not resolve the path to the file system.
-	//       So safe to use on non existant path.
+	//       So safe to use on a non-existent path.
 	pub fn clean(&self) -> SPath {
 		self.path.clean()
 	}

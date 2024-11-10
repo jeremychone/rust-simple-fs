@@ -1,12 +1,12 @@
-/// Note: In the future, the lifetime might go away, and the iter_files will take Option<&ListOptions>
+/// Note: In the future, the lifetime might be removed, and iter_files will take Option<&ListOptions>.
 #[derive(Default)]
 pub struct ListOptions<'a> {
 	pub exclude_globs: Option<Vec<&'a str>>,
 
 	/// When this is true,
-	/// - the glob will be relative to the dir of the list, rather than including it.
+	/// - the glob will be relative to the directory of the list, rather than including it.
 	///
-	/// By default it is false.
+	/// By default, it is false.
 	pub relative_glob: bool,
 }
 
