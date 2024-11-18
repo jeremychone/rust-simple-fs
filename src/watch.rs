@@ -2,10 +2,11 @@ use crate::{Error, Result, SPath};
 use notify::{self, RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::{new_debouncer, DebounceEventHandler, DebounceEventResult, Debouncer, RecommendedCache};
 use std::path::Path;
-use std::sync::mpsc::{channel, Receiver, Sender};
+// use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
 // -- Re-export some DebouncedEvent
+use flume::{Receiver, Sender};
 pub use notify_debouncer_full::DebouncedEvent;
 use std::collections::HashSet;
 
@@ -58,7 +59,7 @@ pub struct SWatcher {
 /// Each `SEvent` contains one `spath` and one simplified event kind (`SEventKind`).
 /// This will ignore any path that cannot be converted to a string (i.e., it will only trigger events if the path is valid UTF-8)
 pub fn watch(path: impl AsRef<Path>) -> Result<SWatcher> {
-	let (tx, rx) = channel();
+	let (tx, rx) = flume::unbounded();
 
 	let path = path.as_ref();
 	let handler = EventHandler { tx };
