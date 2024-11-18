@@ -13,9 +13,12 @@
 | `full`      | All the above.                                   |
 | default     | None of the above. See below.                    |
 
-## API Change `0.2.0` from `0.1.x`
+## API Changes
 
-- API CHANGE - now .file_name() and .file_stem() returns Option<&str> use .name(), .stem() to have &str
+- `0.3.x` from `0.2.x`
+  - API CHANGE - watch - change the rx to be [flume](https://crates.io/crates/flume) base (works on both sync/async)
+- `0.2.0` from `0.1.x`
+  - API CHANGE - now .file_name() and .file_stem() returns Option<&str> use .name(), .stem() to have &str
 
 ## Concept 
 
