@@ -35,8 +35,8 @@ fn iter_files_impl(
 	// -- Prepare globs
 	// will default to false
 	let dir_relative = list_options.as_ref().map(|l| l.relative_glob).unwrap_or_default();
-
 	let include_globs = include_globs.map(get_glob_set).transpose()?;
+
 	let exclude_globs: Option<&[&str]> = list_options
 		.as_ref() // Borrow list_options to ensure it remains valid
 		.and_then(|o| o.exclude_globs()); // No flatten needed as it's Option<&[&str]>
@@ -86,11 +86,13 @@ fn iter_files_impl(
 						return false;
 					}
 				}
+
 				// Then, evaluate the includes.
-				match include_globs.as_ref() {
+				let res = match include_globs.as_ref() {
 					Some(globs) => globs.is_match(&path),
 					None => true,
-				}
+				};
+				res
 			}
 		})
 		// only take ok entry that are files

@@ -4,14 +4,53 @@ pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 #[test]
 fn test_list_one_level_dotted() -> Result<()> {
+	// NOTE F"*.toml" it won't work since absolute
+	//      Use relative glob below
 	// -- Exec
-	let res = list_files("./", Some(&["*.toml"]), None)?;
+	let res = list_files("./", Some(&["./*.toml"]), None)?;
 
 	// -- Check
 	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 2, "Should have 2 files with *.toml");
 	assert!(res_paths.contains(&"./Cargo.toml"), " Should contain Cargo.toml");
 	assert!(res_paths.contains(&"./rustfmt.toml"), " Should contain rustfmt.toml");
+
+	Ok(())
+}
+
+#[test]
+fn test_list_rel_one_level_dotted() -> Result<()> {
+	// NOTE With relative_glob, "*.toml" now works
+	// -- Exec
+	let res = list_files("./", Some(&["*.toml"]), Some(ListOptions::from_relative_glob(true)))?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert_eq!(res.len(), 2, "Should have 2 files with *.toml");
+	assert!(res_paths.contains(&"./Cargo.toml"), " Should contain Cargo.toml");
+	assert!(res_paths.contains(&"./rustfmt.toml"), " Should contain rustfmt.toml");
+
+	Ok(())
+}
+
+#[test]
+fn test_list_rel_one_level_no_file() -> Result<()> {
+	// -- Exec
+	let res = list_files("./", Some(&["./*.rs"]), Some(ListOptions::from_relative_glob(true)))?;
+
+	// -- Check
+	assert_eq!(res.len(), 0, "Should have 0 files with *.rs in base dir");
+
+	Ok(())
+}
+
+#[test]
+fn test_list_one_level_no_file() -> Result<()> {
+	// -- Exec
+	let res = list_files("./", Some(&["./*.rs"]), None)?;
+
+	// -- Check
+	assert_eq!(res.len(), 0, "Should have 0 files with *.rs in base dir");
 
 	Ok(())
 }

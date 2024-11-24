@@ -2,7 +2,6 @@
 
 [simple-fs](https://github.com/jeremychone/rust-simple-fs) is a crate that provides a set of convenient and common file APIs built on `std::fs`, [walkdir](https://crates.io/crates/walkdir), and [globset](https://crates.io/crates/globset).
 
-
 ## Cargo Features
 
 | Feature     | Functions Included                               |
@@ -15,20 +14,26 @@
 
 ## API Changes
 
+- `0.3.1` from `0.3.0`
+  - This is more of a fix, but it can change behavior on `list/iter` files. 
+    - Previously, the glob `*` was going through the subfolder `/`, which was not the intended way. 
+    - Now, in `0.3.1`, it uses the glob `literal_separator = true`, so it won't descend further. 
+    - Now, we can use `*.rs` to list direct descendants and `**/*.rs` for nested files. 
+    - The glob also needs to include the `dir` given in the list, otherwise, set `ListOptions.relative_glob = true` to make it relative. 
 - `0.3.x` from `0.2.x`
-  - API CHANGE - watch - change the rx to be [flume](https://crates.io/crates/flume) base (works on both sync/async)
+  - API CHANGE - watch - change the rx to be [flume](https://crates.io/crates/flume) based (works on both sync/async)
 - `0.2.0` from `0.1.x`
-  - API CHANGE - now .file_name() and .file_stem() returns Option<&str> use .name(), .stem() to have &str
+  - API CHANGE - now .file_name() and .file_stem() return Option<&str>; use .name() or .stem() to get &str
 
 ## Concept 
 
-`simple-fs` operates under the assumption that paths which are not `utf8` are not visible to the API, which simplifies many of the path-related APIs.
+`simple-fs` operates under the assumption that paths which are not `utf8` are not visible to the API, simplifying many of the path-related APIs.
 
 The two constructs that follow this assumption are (both are just wrappers of PathBuf with some guarantees):
 
 - `SPath`, which ensures that the contained path is a valid UTF-8 path and includes a file name.
 
-- `SFile`, which carries the same guarantees as `SPath` but also checks if the file `is_file()`, confirming the file's existence at the time of the `SFile` construction.
+- `SFile`, which carries the same guarantees as `SPath` but also checks if the file `is_file()`, confirming the file's existence at the time of `SFile` construction.
 
 By establishing these rules, APIs such as `.file_name()`, `.file_stem()`, and `.to_str()` are much simpler, as they all return `&str`.
 
