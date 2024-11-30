@@ -10,4 +10,4 @@ model = "gpt-4o"
 
 [runtime]
 # Default to 1 if absent
-items_concurrency = 12
+input_concurrency = 12
