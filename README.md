@@ -4,7 +4,7 @@
 
 ## Cargo Features
 
-| Feature     | Functions Included                               |
+| Feature     | Functions Included                              |
 |-------------|--------------------------------------------------|
 | `with-json` | `load_json`, `save_json`, `save_json_pretty`     |
 | `with-toml` | `load_toml`, `save_toml`                         |
@@ -15,24 +15,23 @@
 ## API Changes
 
 - `0.3.1` from `0.3.0`
-  - This is more of a fix, but it can change behavior on `list/iter` files. 
-    - Previously, the glob `*` was going through the subfolder `/`, which was not the intended way. 
+  - This is a fix; however, it can change behavior on `list/iter` files. 
+    - Previously, the glob `*` was traversing into subfolders `/`, which was not the intended behavior. 
     - Now, in `0.3.1`, it uses the glob `literal_separator = true`, so it won't descend further. 
-    - Now, we can use `*.rs` to list direct descendants and `**/*.rs` for nested files. 
-    - The glob also needs to include the `dir` given in the list, otherwise, set `ListOptions.relative_glob = true` to make it relative. 
+    - You can now use `*.rs` to list direct descendants and `**/*.rs` for nested files. 
+    - The glob also needs to include the `dir` given in the list; otherwise, set `ListOptions.relative_glob = true` to make it relative. 
 - `0.3.x` from `0.2.x`
-  - API CHANGE - watch - change the rx to be [flume](https://crates.io/crates/flume) based (works on both sync/async)
+  - API CHANGE - watch - changes the rx to be [flume](https://crates.io/crates/flume) based (works on both sync/async).
 - `0.2.0` from `0.1.x`
-  - API CHANGE - now .file_name() and .file_stem() return Option<&str>; use .name() or .stem() to get &str
+  - API CHANGE - now .file_name() and .file_stem() return Option<&str>; use .name() or .stem() to get &str.
 
-## Concept 
+## Concept
 
 `simple-fs` operates under the assumption that paths which are not `utf8` are not visible to the API, simplifying many of the path-related APIs.
 
 The two constructs that follow this assumption are (both are just wrappers of PathBuf with some guarantees):
 
 - `SPath`, which ensures that the contained path is a valid UTF-8 path and includes a file name.
-
 - `SFile`, which carries the same guarantees as `SPath` but also checks if the file `is_file()`, confirming the file's existence at the time of `SFile` construction.
 
 By establishing these rules, APIs such as `.file_name()`, `.file_stem()`, and `.to_str()` are much simpler, as they all return `&str`.
