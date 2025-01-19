@@ -29,8 +29,8 @@ unsafe_code = "forbid"
 # -- Files
 walkdir = "2"
 globset = "0.4"
-notify = "7"
-notify-debouncer-full = "0.4"
+notify = "8"
+notify-debouncer-full = "0.5"
 # -- Feature: json, toml
 serde = { version = "1", features = ["derive"], optional = true}
 # -- Feature: json
