@@ -14,6 +14,9 @@
 
 ## API Changes
 
+- `0.4.0`
+  - Update to `notify 8` (should not have any API Changes)
+  - API CHANGE - SPath - Now `SPath::from(&str/&String,String)` (no need for `try_from`)
 - `0.3.1` from `0.3.0`
   - This is a fix; however, it can change behavior on `list/iter` files. 
     - Previously, the glob `*` was traversing into subfolders `/`, which was not the intended behavior. 
