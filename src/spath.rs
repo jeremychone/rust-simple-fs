@@ -5,11 +5,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// An SPath can be constructed from a Path, io::DirEntry, or walkdir::DirEntry
-/// and guarantees the following:
-///
-/// - The full path is UTF-8 valid.
-/// - It does NOT have to have a file NAME (e.g., './'). If no file_name, .file_name() will return ""
+/// An SPath can be constructed from a String, Path, io::DirEntry, or walkdir::DirEntry
+/// and guarantees the path is UTF-8, simplifying many apis.
 #[derive(Debug, Clone)]
 pub struct SPath {
 	pub(crate) path_buf: PathBuf,
@@ -224,6 +221,13 @@ impl SPath {
 		Ok(SPath { path_buf: joined })
 	}
 
+	/// Joins a valid UTF-8 string to the path of this SPath.
+	/// Returns - The joined SPath as it is guaranteed to be UTF-8.
+	pub fn join_str(&self, leaf_path: &str) -> SPath {
+		let joined = self.path().join(leaf_path);
+		SPath { path_buf: joined }
+	}
+
 	/// Creates a new sibling SPath with the given leaf_path.
 	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
@@ -272,6 +276,10 @@ impl fmt::Display for SPath {
 	}
 }
 
+// endregion: --- Std Traits Impls
+
+// region:    --- Froms (into other types)
+
 impl From<SPath> for String {
 	fn from(val: SPath) -> Self {
 		val.to_str().to_string()
@@ -281,16 +289,6 @@ impl From<SPath> for String {
 impl From<&SPath> for String {
 	fn from(val: &SPath) -> Self {
 		val.to_str().to_string()
-	}
-}
-
-// endregion: --- Std Traits Impls
-
-// region:    --- Froms
-
-impl From<SFile> for SPath {
-	fn from(sfile: SFile) -> Self {
-		SPath { path_buf: sfile.into() }
 	}
 }
 
@@ -305,35 +303,44 @@ impl From<&SPath> for PathBuf {
 		val.path_buf.clone()
 	}
 }
+
+// endregion: --- Froms (into other types)
+
+// region:    --- Froms
+
+impl From<SFile> for SPath {
+	fn from(sfile: SFile) -> Self {
+		SPath { path_buf: sfile.into() }
+	}
+}
+
+impl From<String> for SPath {
+	fn from(path: String) -> Self {
+		Self {
+			path_buf: PathBuf::from(path),
+		}
+	}
+}
+
+impl From<&String> for SPath {
+	fn from(path: &String) -> Self {
+		Self {
+			path_buf: PathBuf::from(path),
+		}
+	}
+}
+
+impl From<&str> for SPath {
+	fn from(path: &str) -> Self {
+		Self {
+			path_buf: PathBuf::from(path),
+		}
+	}
+}
+
 // endregion: --- Froms
 
 // region:    --- TryFrom
-
-impl TryFrom<&str> for SPath {
-	type Error = Error;
-	fn try_from(path: &str) -> Result<SPath> {
-		let path = Path::new(path);
-		validate_spath_for_result(path)?;
-
-		Ok(Self {
-			path_buf: path.to_path_buf(),
-		})
-	}
-}
-
-impl TryFrom<String> for SPath {
-	type Error = Error;
-	fn try_from(path: String) -> Result<SPath> {
-		SPath::try_from(path.as_str())
-	}
-}
-
-impl TryFrom<&String> for SPath {
-	type Error = Error;
-	fn try_from(path: &String) -> Result<SPath> {
-		SPath::try_from(path.as_str())
-	}
-}
 
 impl TryFrom<PathBuf> for SPath {
 	type Error = Error;

@@ -277,7 +277,7 @@ impl From<&SFile> for PathBuf {
 impl TryFrom<&str> for SFile {
 	type Error = Error;
 	fn try_from(path: &str) -> Result<SFile> {
-		let path = SPath::try_from(path)?;
+		let path = SPath::from(path);
 		validate_sfile_for_result(&path)?;
 
 		Ok(Self { path })
