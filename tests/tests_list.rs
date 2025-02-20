@@ -111,15 +111,19 @@ fn test_list_sub_dir_rel_glob() -> Result<()> {
 
 #[test]
 fn test_list_absolute_wildcard() -> Result<()> {
+	// TODO: Need to support absolute path out of the base dir of the list
 	// Get the absolute path to the "src" directory.
 	let src_abs = std::fs::canonicalize("src")?;
 	let src_abs_str = src_abs.to_str().unwrap();
+
+	// Get the parent directory of the file.
+	let parent_dir = src_abs.parent().expect("Should be parent dir");
 
 	// Construct a glob pattern that should match the "spath.rs" file.
 	let pattern = format!("{}/{}", src_abs_str, "*path.rs");
 
 	// Execute list_files using the absolute src directory and the wildcard pattern.
-	let files = list_files(&src_abs, Some(&[pattern.as_str()]), None)?;
+	let files = list_files(parent_dir, Some(&[pattern.as_str()]), None)?;
 
 	// Check that at least one file's path ends with "spath.rs"
 	let found = files.iter().any(|p| p.to_str().ends_with("spath.rs"));
@@ -130,6 +134,7 @@ fn test_list_absolute_wildcard() -> Result<()> {
 
 #[test]
 fn test_list_absolute_direct() -> Result<()> {
+	// TODO: Need to support absolute path out of the base dir of the list
 	// Get the absolute path to "src/spath.rs".
 	let file_abs = std::fs::canonicalize("src/spath.rs")?;
 	let file_abs_str = file_abs.to_str().unwrap();

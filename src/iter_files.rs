@@ -68,8 +68,7 @@ fn iter_files_impl(
 				path
 			};
 
-			// If it's a directory, check the excludes.
-
+			// -- IS DIR - If it's a directory, check the excludes.
 			// NOTE 1: It is important not to glob check the includes for directories, as they will always fail.
 			if is_dir {
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
@@ -78,7 +77,7 @@ fn iter_files_impl(
 					true
 				}
 			}
-			// Else, for files, we apply the globs.
+			// -- ELSE IS FILE, for files, we apply the globs.
 			else {
 				// First, evaluate the excludes.
 				if let Some(exclude_globs) = exclude_globs.as_ref() {
