@@ -109,6 +109,47 @@ fn test_list_sub_dir_rel_glob() -> Result<()> {
 	Ok(())
 }
 
+#[test]
+fn test_list_absolute_wildcard() -> Result<()> {
+	// Get the absolute path to the "src" directory.
+	let src_abs = std::fs::canonicalize("src")?;
+	let src_abs_str = src_abs.to_str().unwrap();
+
+	// Construct a glob pattern that should match the "spath.rs" file.
+	let pattern = format!("{}/{}", src_abs_str, "*path.rs");
+
+	// Execute list_files using the absolute src directory and the wildcard pattern.
+	let files = list_files(&src_abs, Some(&[pattern.as_str()]), None)?;
+
+	// Check that at least one file's path ends with "spath.rs"
+	let found = files.iter().any(|p| p.to_str().ends_with("spath.rs"));
+	assert!(found, "Expected to find spath.rs file with wildcard absolute pattern");
+
+	Ok(())
+}
+
+#[test]
+fn test_list_absolute_direct() -> Result<()> {
+	// Get the absolute path to "src/spath.rs".
+	let file_abs = std::fs::canonicalize("src/spath.rs")?;
+	let file_abs_str = file_abs.to_str().unwrap();
+
+	// Get the parent directory of the file.
+	let parent_dir = file_abs.parent().unwrap();
+
+	// Execute list_files using the parent directory and an exact match glob for the file.
+	let files = list_files(parent_dir, Some(&[file_abs_str]), None)?;
+	assert_eq!(files.len(), 1, "Should have exactly one file with exact match");
+
+	let returned_path = files[0].to_str();
+	assert_eq!(
+		returned_path, file_abs_str,
+		"The file path should match the absolute file path"
+	);
+
+	Ok(())
+}
+
 // region:    --- Support
 
 /// Reusable function for the the result of `./tests/tests*.rs`
