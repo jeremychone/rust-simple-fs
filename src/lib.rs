@@ -4,6 +4,7 @@ mod dir;
 mod error;
 mod file;
 mod glob;
+mod globs_iter;
 mod iter_files;
 mod list_options;
 mod sfile;
