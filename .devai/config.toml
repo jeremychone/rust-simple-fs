@@ -8,7 +8,7 @@
 #          OpenAI: "o3-mini", "o3-mini-high", "o3-mini-low", "gpt-4o", "gpt-4o-mini"
 #          Gemini: "gemini-2.0-flash-001", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b" 
 #        DeepSeek: "deepseek-chat" "deepseek-reasoner" (from deepseek.com)
-model = "gpt-4o-mini" # or an alias below (e.g. "fast", "cost-saver")
+model = "fast" # or an alias below (e.g. "fast", "cost-saver")
 
 # Temperature (by default unset)
 # temperature = 0.0

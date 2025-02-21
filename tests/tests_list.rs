@@ -116,9 +116,6 @@ fn test_list_files_absolute_wildcard() -> Result<()> {
 	let src_abs = std::fs::canonicalize("./")?;
 	let src_abs_str = src_abs.to_str().unwrap();
 
-	// Get the parent directory of the file.
-	let parent_dir = src_abs.parent().expect("Should be parent dir");
-
 	// Construct a glob pattern that should match the "spath.rs" file.
 	let pattern = format!("{}/{}", src_abs_str, "**/*path.rs");
 

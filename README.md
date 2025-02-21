@@ -14,8 +14,10 @@
 
 ## API Changes
 
+- `0.5.0`
+  - Reimplementation of the iter_files iterator, supporting absolute path globs out of the base directory. 
 - `0.4.0`
-  - Update to `notify 8` (should not have any API Changes)
+  - Update to `notify 8` (should not have any API changes)
   - API CHANGE - SPath - Now `SPath::from(&str/&String,String)` (no need for `try_from`)
 - `0.3.1` from `0.3.0`
   - This is a fix; however, it can change behavior on `list/iter` files. 
@@ -30,7 +32,7 @@
 
 ## Concept
 
-`simple-fs` operates under the assumption that paths which are not `utf8` are not visible to the API, simplifying many of the path-related APIs.
+`simple-fs` operates under the assumption that paths that are not `utf8` are not visible to the API, simplifying many of the path-related APIs.
 
 The two constructs that follow this assumption are (both are just wrappers of PathBuf with some guarantees):
 
