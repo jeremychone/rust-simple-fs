@@ -42,5 +42,5 @@ byteorder = { version = "1.5", optional = true}
 pathdiff = "0.2.2"
 path-clean = "1.0.1"
 # -- Other
-derive_more = {version = "1.0", features = ["from"] }
+derive_more = {version = "2.0", features = ["from"] }
 flume = "0.11.1"

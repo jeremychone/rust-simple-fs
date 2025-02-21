@@ -3,7 +3,7 @@ use simple_fs::SPath;
 pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 #[test]
-fn test_spath_new_sibling() -> Result<()> {
+fn test_spath_spath_new_sibling() -> Result<()> {
 	// -- Setup & Fixtures
 	let fx_data = &[
 		// (original_path, sibling_leaf_path, expected_path)
@@ -29,7 +29,7 @@ fn test_spath_new_sibling() -> Result<()> {
 }
 
 #[test]
-fn test_spath_diff() -> Result<()> {
+fn test_spath_spath_diff() -> Result<()> {
 	// -- Setup & Fixtures
 	let fx_data = &[
 		// (base_path, target_path, expected_path)
@@ -47,7 +47,6 @@ fn test_spath_diff() -> Result<()> {
 
 	// -- Exec & Check
 	for data in fx_data.iter() {
-		println!();
 		let base_path = SPath::new(data.0)?;
 		let target_path = SPath::new(data.1)?;
 		let expected_path = SPath::new(data.2)?;

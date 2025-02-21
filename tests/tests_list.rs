@@ -3,7 +3,7 @@ use simple_fs::{iter_files, list_files, ListOptions};
 pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 #[test]
-fn test_list_one_level_dotted() -> Result<()> {
+fn test_list_files_one_level_dotted() -> Result<()> {
 	// NOTE F"*.toml" it won't work since absolute
 	//      Use relative glob below
 	// -- Exec
@@ -19,7 +19,7 @@ fn test_list_one_level_dotted() -> Result<()> {
 }
 
 #[test]
-fn test_list_rel_one_level_dotted() -> Result<()> {
+fn test_list_files_rel_one_level_dotted() -> Result<()> {
 	// NOTE With relative_glob, "*.toml" now works
 	// -- Exec
 	let res = list_files("./", Some(&["*.toml"]), Some(ListOptions::from_relative_glob(true)))?;
@@ -34,7 +34,7 @@ fn test_list_rel_one_level_dotted() -> Result<()> {
 }
 
 #[test]
-fn test_list_rel_one_level_no_file() -> Result<()> {
+fn test_list_files_rel_one_level_no_file() -> Result<()> {
 	// -- Exec
 	let res = list_files("./", Some(&["./*.rs"]), Some(ListOptions::from_relative_glob(true)))?;
 
@@ -45,7 +45,7 @@ fn test_list_rel_one_level_no_file() -> Result<()> {
 }
 
 #[test]
-fn test_list_one_level_no_file() -> Result<()> {
+fn test_list_files_one_level_no_file() -> Result<()> {
 	// -- Exec
 	let res = list_files("./", Some(&["./*.rs"]), None)?;
 
@@ -56,7 +56,7 @@ fn test_list_one_level_no_file() -> Result<()> {
 }
 
 #[test]
-fn test_list_one_file_dotted() -> Result<()> {
+fn test_list_files_one_file_dotted() -> Result<()> {
 	// -- Exec
 	let res = list_files(".", Some(&["./Cargo.toml"]), None)?;
 
@@ -69,7 +69,7 @@ fn test_list_one_file_dotted() -> Result<()> {
 }
 
 #[test]
-fn test_list_sub_level_dotted() -> Result<()> {
+fn test_list_files_sub_level_dotted() -> Result<()> {
 	// -- Exec
 	let res = list_files("./", Some(&["./tests/**/*.rs"]), None)?;
 
@@ -81,7 +81,7 @@ fn test_list_sub_level_dotted() -> Result<()> {
 }
 
 #[test]
-fn test_list_sub_dir_full_path() -> Result<()> {
+fn test_list_files_sub_dir_full_path() -> Result<()> {
 	// -- Exec
 	let res = list_files("./tests/", Some(&["./tests/tests*.rs"]), None)?;
 
@@ -92,9 +92,9 @@ fn test_list_sub_dir_full_path() -> Result<()> {
 	Ok(())
 }
 
-/// Here the globs are lative to the base dir given (here `./tests/`)
+/// Here the globs are relative to the base dir given (here `./tests/`)
 #[test]
-fn test_list_sub_dir_rel_glob() -> Result<()> {
+fn test_list_files_sub_dir_rel_glob() -> Result<()> {
 	// -- Exec
 	let res = list_files(
 		"./tests/",
@@ -110,7 +110,7 @@ fn test_list_sub_dir_rel_glob() -> Result<()> {
 }
 
 #[test]
-fn test_list_absolute_wildcard() -> Result<()> {
+fn test_list_files_absolute_wildcard() -> Result<()> {
 	// TODO: Need to support absolute path out of the base dir of the list
 	// Get the absolute path to the "src" directory.
 	let src_abs = std::fs::canonicalize("./")?;
@@ -133,7 +133,7 @@ fn test_list_absolute_wildcard() -> Result<()> {
 }
 
 #[test]
-fn test_list_absolute_direct() -> Result<()> {
+fn test_list_files_absolute_direct() -> Result<()> {
 	// TODO: Need to support absolute path out of the base dir of the list
 	// Get the absolute path to "src/spath.rs".
 	let file_abs = std::fs::canonicalize("src/spath.rs")?;
@@ -156,7 +156,7 @@ fn test_list_absolute_direct() -> Result<()> {
 }
 
 #[test]
-fn test_list_mixed_absolute_and_relative_globs() -> Result<()> {
+fn test_list_files_mixed_absolute_and_relative_globs() -> Result<()> {
 	// Mix an absolute glob and a relative glob in the same call.
 	let abs_pattern = std::fs::canonicalize("./tests/tests_list.rs")?;
 	let patterns = [abs_pattern.to_str().unwrap(), "tests/tests_spath.rs"];
@@ -175,7 +175,7 @@ fn test_list_mixed_absolute_and_relative_globs() -> Result<()> {
 }
 
 #[test]
-fn test_list_mixed_absolute_and_relative_globs_with_relative_option() -> Result<()> {
+fn test_list_files_mixed_absolute_and_relative_globs_with_relative_option() -> Result<()> {
 	// Mix an absolute glob and a relative glob with the relative_glob option enabled.
 	let abs_pattern = std::fs::canonicalize("./tests/tests_spath.rs")?;
 	let patterns = ["tests/tests_list.rs", abs_pattern.to_str().unwrap()];
@@ -198,7 +198,7 @@ fn test_list_mixed_absolute_and_relative_globs_with_relative_option() -> Result<
 }
 
 #[test]
-fn test_iter_files_simple_glob_ok() -> Result<()> {
+fn test_list_iter_files_simple_glob_ok() -> Result<()> {
 	let iter = iter_files("./", Some(&["./src/s*.rs"]), None)?;
 	let count = iter.count();
 	assert_eq!(count, 2, "Expected 2 files matching pattern");
@@ -206,7 +206,7 @@ fn test_iter_files_simple_glob_ok() -> Result<()> {
 }
 
 #[test]
-fn test_iter_files_nested_and_exclude_ok() -> Result<()> {
+fn test_list_iter_files_nested_and_exclude_ok() -> Result<()> {
 	let excludes = [simple_fs::DEFAULT_EXCLUDE_GLOBS, &["**/.devai", "*.lock", "**/w*.rs"]].concat();
 	let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(excludes.into()))?;
 	let count = iter.count();
