@@ -155,14 +155,14 @@ fn test_list_files_absolute_direct() -> Result<()> {
 #[test]
 fn test_list_files_mixed_absolute_and_relative_globs() -> Result<()> {
 	// Mix an absolute glob and a relative glob in the same call.
-	let abs_pattern = std::fs::canonicalize("./tests/tests_list.rs")?;
+	let abs_pattern = std::fs::canonicalize("./tests/tests_list_files.rs")?;
 	let patterns = [abs_pattern.to_str().unwrap(), "tests/tests_spath.rs"];
 	let res = list_files("./", Some(&patterns), None)?;
 	let res_paths: Vec<&str> = res.iter().map(|p| p.to_str()).collect();
 	assert_eq!(res.len(), 2, "Expected both files to be found using mixed patterns");
 	assert!(
-		res_paths.iter().any(|&p| p.ends_with("tests_list.rs")),
-		"Should contain tests_list.rs"
+		res_paths.iter().any(|&p| p.ends_with("tests_list_files.rs")),
+		"Should contain tests_list_files.rs"
 	);
 	assert!(
 		res_paths.iter().any(|&p| p.ends_with("tests_spath.rs")),
@@ -175,7 +175,7 @@ fn test_list_files_mixed_absolute_and_relative_globs() -> Result<()> {
 fn test_list_files_mixed_absolute_and_relative_globs_with_relative_option() -> Result<()> {
 	// Mix an absolute glob and a relative glob with the relative_glob option enabled.
 	let abs_pattern = std::fs::canonicalize("./tests/tests_spath.rs")?;
-	let patterns = ["tests/tests_list.rs", abs_pattern.to_str().unwrap()];
+	let patterns = ["tests/tests_list_dirs.rs", abs_pattern.to_str().unwrap()];
 	let res = list_files("./", Some(&patterns), Some(ListOptions::from_relative_glob(true)))?;
 	let res_paths: Vec<&str> = res.iter().map(|p| p.to_str()).collect();
 	assert_eq!(
@@ -184,8 +184,8 @@ fn test_list_files_mixed_absolute_and_relative_globs_with_relative_option() -> R
 		"Expected both files to be found using mixed patterns with relative_glob option"
 	);
 	assert!(
-		res_paths.iter().any(|&p| p.ends_with("tests_list.rs")),
-		"Should contain tests_list.rs"
+		res_paths.iter().any(|&p| p.ends_with("tests_list_dirs.rs")),
+		"Should contain tests_list_dirs.rs"
 	);
 	assert!(
 		res_paths.iter().any(|&p| p.ends_with("tests_spath.rs")),
@@ -207,7 +207,7 @@ fn test_list_iter_files_nested_and_exclude_ok() -> Result<()> {
 	let excludes = [simple_fs::DEFAULT_EXCLUDE_GLOBS, &["**/.devai", "*.lock", "**/w*.rs"]].concat();
 	let iter = iter_files("./", Some(&["./src/**/*.rs"]), Some(excludes.into()))?;
 	let count = iter.count();
-	assert_eq!(count, 11, "Expected 11 files matching pattern");
+	assert_eq!(count, 13, "Expected 13 files matching pattern");
 	Ok(())
 }
 
@@ -215,10 +215,10 @@ fn test_list_iter_files_nested_and_exclude_ok() -> Result<()> {
 
 /// Reusable function for the the result of `./tests/tests*.rs`
 fn assert_tests_res(res_paths: &[&str]) {
-	assert_eq!(res_paths.len(), 2, "Should have 2 test files with *.rs");
+	assert_eq!(res_paths.len(), 3, "Should have 2 test files with *.rs");
 	assert!(
-		res_paths.contains(&"./tests/tests_list.rs"),
-		" Should contain './tests/tests_list.rs'"
+		res_paths.contains(&"./tests/tests_list_files.rs"),
+		" Should contain './tests/tests_list_files.rs'"
 	);
 	assert!(
 		res_paths.contains(&"./tests/tests_spath.rs"),

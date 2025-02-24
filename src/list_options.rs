@@ -8,6 +8,9 @@ pub struct ListOptions<'a> {
 	///
 	/// By default, it is false.
 	pub relative_glob: bool,
+
+	/// For now, only used in dir list
+	pub depth: Option<usize>,
 }
 
 /// Constructors
@@ -16,6 +19,7 @@ impl<'a> ListOptions<'a> {
 		ListOptions {
 			exclude_globs: globs.map(|v| v.to_vec()),
 			relative_glob: false,
+			depth: None,
 		}
 	}
 
@@ -23,6 +27,7 @@ impl<'a> ListOptions<'a> {
 		ListOptions {
 			exclude_globs: None,
 			relative_glob: val,
+			depth: None,
 		}
 	}
 }
@@ -54,6 +59,7 @@ impl<'a> From<&'a [&'a str]> for ListOptions<'a> {
 		ListOptions {
 			exclude_globs: Some(globs.to_vec()),
 			relative_glob: false,
+			depth: None,
 		}
 	}
 }
@@ -63,6 +69,7 @@ impl<'a> From<Option<&'a [&'a str]>> for ListOptions<'a> {
 		ListOptions {
 			exclude_globs: globs.map(|v| v.to_vec()),
 			relative_glob: false,
+			depth: None,
 		}
 	}
 }
@@ -73,6 +80,7 @@ impl<'a> From<Vec<&'a str>> for ListOptions<'a> {
 		ListOptions {
 			exclude_globs: Some(globs_ref),
 			relative_glob: false,
+			depth: None,
 		}
 	}
 }

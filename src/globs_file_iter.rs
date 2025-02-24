@@ -1,15 +1,15 @@
 use crate::glob::{get_glob_set, longest_base_path_wild_free, DEFAULT_EXCLUDE_GLOBS};
-use crate::{ListOptions, Result, SFile, SPath};
+use crate::{get_depth, ListOptions, Result, SFile, SPath};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
 use walkdir::WalkDir;
 
-pub struct GlobsIter {
+pub struct GlobsFileIter {
 	inner: Box<dyn Iterator<Item = SFile>>,
 }
 
-impl GlobsIter {
+impl GlobsFileIter {
 	pub fn new(
 		dir: impl AsRef<Path>,
 		include_globs: Option<&[&str]>,
@@ -36,11 +36,13 @@ impl GlobsIter {
 		// For each group, create a WalkDir iterator with its own base and globset
 		let mut group_iterators: Vec<Box<dyn Iterator<Item = SFile>>> = Vec::new();
 
+		let max_depth = list_options.and_then(|o| o.depth);
+
 		let exclude_globs_set = Arc::new(exclude_globs_set);
 		for (group_base, patterns) in groups.into_iter() {
 			// Compute maximum depth among the group's relative glob patterns
 			let pats: Vec<&str> = patterns.iter().map(|s| s.as_str()).collect();
-			let depth = get_depth(&pats);
+			let depth = get_depth(&pats, max_depth);
 
 			// Build the globset for the group from its relative patterns
 			let globset = get_glob_set(&pats)?;
@@ -116,34 +118,17 @@ impl GlobsIter {
 			})
 			.flatten();
 
-		Ok(GlobsIter {
+		Ok(GlobsFileIter {
 			inner: Box::new(dedup_iter),
 		})
 	}
 }
 
-impl Iterator for GlobsIter {
+impl Iterator for GlobsFileIter {
 	type Item = SFile;
 	fn next(&mut self) -> Option<Self::Item> {
 		self.inner.next()
 	}
-}
-
-/// Computes the maximum depth required for a set of glob patterns.
-/// If any pattern contains "**", returns a high depth (100).
-fn get_depth(patterns: &[&str]) -> usize {
-	let mut depth = 1;
-	for &g in patterns {
-		if g.contains("**") {
-			depth = 100;
-			break;
-		}
-		let sep_count = g.matches(std::path::MAIN_SEPARATOR).count() + 1;
-		if sep_count > depth {
-			depth = sep_count;
-		}
-	}
-	depth.max(1)
 }
 
 /// Processes the provided globs into groups with normalized base directories.

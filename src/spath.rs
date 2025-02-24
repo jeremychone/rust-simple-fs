@@ -130,6 +130,15 @@ impl SPath {
 		self.file_name().unwrap_or_default()
 	}
 
+	/// Returns the parent name, and empty static &str if no present
+	pub fn parent_name(&self) -> &str {
+		self.path()
+			.parent()
+			.and_then(|p| p.file_name())
+			.and_then(|n| n.to_str())
+			.unwrap_or_default()
+	}
+
 	/// Returns the Option<&str> representation of the file_stem()
 	///
 	/// Note: if the `OsStr` cannot be made into utf8 will be None

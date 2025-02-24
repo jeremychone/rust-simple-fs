@@ -4,7 +4,8 @@ mod dir;
 mod error;
 mod file;
 mod glob;
-mod globs_iter;
+mod globs_dir_iter;
+mod globs_file_iter;
 mod iter_dirs;
 mod iter_files;
 mod list_options;
@@ -43,3 +44,5 @@ pub use with_toml::*;
 pub use bin_nums::*;
 
 // endregion: --- Modules
+
+const TOP_MAX_DEPTH: usize = 100;
