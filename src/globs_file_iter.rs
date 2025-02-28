@@ -89,12 +89,12 @@ impl GlobsFileIter {
 
 				// Exclude files if they match the global exclude globs
 				if let Some(ref exclude) = exclude_globs_set_clone.as_ref() {
-					if exclude.is_match(rel_path.as_ref()) {
+					if exclude.is_match(&rel_path) {
 						return false;
 					}
 				}
 				// Accept only those files that match the group's globset
-				globset.is_match(rel_path.as_ref())
+				globset.is_match(rel_path)
 			});
 			group_iterators.push(Box::new(iter));
 		}

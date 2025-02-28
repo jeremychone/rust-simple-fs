@@ -256,12 +256,6 @@ impl SPath {
 
 // region:    --- Std Traits Impls
 
-impl AsRef<Path> for SPath {
-	fn as_ref(&self) -> &Path {
-		self.path_buf.as_ref()
-	}
-}
-
 impl fmt::Display for SPath {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.to_str())
@@ -269,6 +263,28 @@ impl fmt::Display for SPath {
 }
 
 // endregion: --- Std Traits Impls
+
+// region:    --- AsRefs
+
+impl AsRef<SPath> for SPath {
+	fn as_ref(&self) -> &SPath {
+		self
+	}
+}
+
+impl AsRef<Path> for SPath {
+	fn as_ref(&self) -> &Path {
+		self.path_buf.as_ref()
+	}
+}
+
+impl AsRef<Utf8Path> for SPath {
+	fn as_ref(&self) -> &Utf8Path {
+		self.path_buf.as_ref()
+	}
+}
+
+// endregion: --- AsRefs
 
 // region:    --- Froms (into other types)
 

@@ -1,6 +1,6 @@
 use crate::SPath;
 use crate::{Error, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -245,6 +245,22 @@ impl fmt::Display for SFile {
 }
 
 // endregion: --- Std Traits Impls
+
+// region:    --- AsRefs
+
+impl AsRef<SFile> for SFile {
+	fn as_ref(&self) -> &SFile {
+		self
+	}
+}
+
+impl AsRef<Utf8Path> for SFile {
+	fn as_ref(&self) -> &Utf8Path {
+		self.path.as_ref()
+	}
+}
+
+// endregion: --- AsRefs
 
 // region:    --- Froms
 
