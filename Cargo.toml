@@ -27,6 +27,7 @@ unsafe_code = "forbid"
 
 [dependencies]
 # -- Files
+camino = "1" # trying this lib out
 walkdir = "2"
 globset = "0.4"
 notify = "8"
@@ -39,7 +40,7 @@ serde_json = { version = "1", optional = true}
 toml = { version = "0.8", optional = true}
 # -- Features: bin-nums
 byteorder = { version = "1.5", optional = true}
-pathdiff = "0.2.2"
+pathdiff = { version = "0.2.2", features = ["camino"]}
 path-clean = "1.0.1"
 # -- Other
 derive_more = {version = "2.0", features = ["from"] }

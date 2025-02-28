@@ -1,5 +1,6 @@
 use crate::SPath;
 use crate::{Error, Result};
+use camino::Utf8PathBuf;
 use core::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,7 +19,7 @@ pub struct SFile {
 
 /// Constructors that guarantee the SFile contract described in the struct
 impl SFile {
-	/// Constructor for SFile accepting anything that implements Into<&PathBuf>.
+	/// Constructor for SFile accepting anything that implements Into<PathBuf>.
 	///
 	/// Note: This is quite ergonomic and allows for avoiding a PathBuf allocation
 	///       if a PathBuf is provided.
@@ -30,7 +31,7 @@ impl SFile {
 		Ok(Self { path })
 	}
 
-	/// Constructor from File and all impl AsRef<&Path>.
+	/// Constructor from File and all impl AsRef<Path>.
 	///
 	/// Returns Result<SFile>
 	///
@@ -51,7 +52,7 @@ impl SFile {
 		Ok(Self { path })
 	}
 
-	/// Constructors for anything that implements AsRef<&Path>.
+	/// Constructors for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
 	///
@@ -90,24 +91,20 @@ impl SFile {
 	}
 }
 
-/// Public return Path constructs.
+/// Public into path
 impl SFile {
-	/// Converts SFile into a PathBuf.
-	///
-	/// Takes ownership of the SFile and returns the underlying PathBuf.
+	/// Consumes the SFile and returns its PathBuf.
 	pub fn into_path_buf(self) -> PathBuf {
-		self.path.path_buf
+		self.path.into_path_buf()
 	}
 
-	/// Returns a reference to the Path.
-	///
-	/// Accesses the internal path of the SFile without transferring ownership.
+	/// Returns a reference to the internal Path.
 	pub fn path(&self) -> &Path {
 		self.path.path()
 	}
 }
 
-/// Public file components as str methods.
+/// Public getters
 impl SFile {
 	/// Returns the &str of the path.
 	///
@@ -118,39 +115,30 @@ impl SFile {
 	}
 
 	/// Returns the Option<&str> representation of the `path.file_name()`.
-	///
-	/// Note: if the `OsStr` cannot be made into UTF-8, will be None.
-	///
 	pub fn file_name(&self) -> Option<&str> {
 		self.path.file_name()
 	}
 
 	/// Returns the &str representation of the `path.file_name()`.
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` is not UTF-8, will be an empty string
+	/// Note: If no file name will be an empty string
 	pub fn name(&self) -> &str {
-		self.file_name().unwrap_or_default()
+		self.path.name()
 	}
 
 	/// Returns the parent name, and empty static &str if no present
 	pub fn parent_name(&self) -> &str {
-		self.path()
-			.parent()
-			.and_then(|p| p.file_name())
-			.and_then(|n| n.to_str())
-			.unwrap_or_default()
+		self.path.parent_name()
 	}
 
 	/// Returns the Option<&str> representation of the file_stem().
-	///
-	/// Note: if the `OsStr` cannot be made into UTF-8, will be None.
 	pub fn file_stem(&self) -> Option<&str> {
 		self.path.file_stem()
 	}
 
 	/// Returns the &str representation of the `file_name()`.
 	///
-	/// Note: If no file name (e.g., `./`) or `OsStr` is not UTF-8, will be an empty string
+	/// Note: If no stem, will be an empty string
 	pub fn stem(&self) -> &str {
 		self.path.stem()
 	}
@@ -205,8 +193,6 @@ impl SFile {
 	}
 
 	/// Returns the parent directory as SPath, if available.
-	///
-	/// If the SFile has a parent directory, converts it to SPath and returns it.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path.parent()
 	}
@@ -217,6 +203,12 @@ impl SFile {
 	/// and returns the result as an SPath.
 	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		self.path.join(leaf_path)
+	}
+
+	/// Joins a valid UTF-8 string to the path of this SFile.
+	/// Returns - The joined SPath as it is guaranteed to be UTF-8.
+	pub fn join_str(&self, leaf_path: &str) -> SPath {
+		self.path.join_str(leaf_path)
 	}
 
 	/// Creates a new sibling path with the specified leaf_path.
@@ -237,6 +229,7 @@ impl SFile {
 		self.path.diff(base)
 	}
 }
+
 // region:    --- Std Traits Impls
 
 impl AsRef<Path> for SFile {
@@ -275,7 +268,13 @@ impl From<SFile> for PathBuf {
 
 impl From<&SFile> for PathBuf {
 	fn from(val: &SFile) -> Self {
-		val.path.path_buf.clone()
+		val.path().to_path_buf()
+	}
+}
+
+impl From<SFile> for Utf8PathBuf {
+	fn from(val: SFile) -> Self {
+		val.path.path_buf
 	}
 }
 
@@ -310,7 +309,7 @@ impl TryFrom<&String> for SFile {
 impl TryFrom<PathBuf> for SFile {
 	type Error = Error;
 	fn try_from(path_buf: PathBuf) -> Result<SFile> {
-		let path = SPath::new(path_buf)?;
+		let path = SPath::try_from(path_buf)?;
 		validate_sfile_for_result(&path)?;
 
 		Ok(Self { path })
@@ -353,7 +352,7 @@ fn validate_sfile_for_result(path: &SPath) -> Result<()> {
 	if path.is_file() {
 		Ok(())
 	} else {
-		Err(Error::FileNotFound(path.path_buf.to_string_lossy().to_string()))
+		Err(Error::FileNotFound(path.to_str().to_string()))
 	}
 }
 
