@@ -162,7 +162,7 @@ impl SFile {
 	}
 
 	/// Returns the epoch duration in microseconds.
-	/// Note: The maximum UTC date would be approximately `292277-01-09 04:00:54 UTC`.
+	/// Note: The maximum UTC date would be approximately `2262-04-11`.
 	///       Thus, for all intents and purposes, it is far enough not to worry.
 	pub fn modified_us(&self) -> Result<i64> {
 		self.path.modified_us()
@@ -180,6 +180,16 @@ impl SFile {
 			Err(_) => i64::MAX,
 		};
 		Ok(size)
+	}
+
+	/// Returns true if the internal path is absolute.
+	pub fn is_absolute(&self) -> bool {
+		self.path.is_absolute()
+	}
+
+	/// Returns true if the internal path is relative.
+	pub fn is_relative(&self) -> bool {
+		self.path.is_relative()
 	}
 }
 

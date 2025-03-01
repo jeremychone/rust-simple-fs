@@ -175,7 +175,7 @@ impl SPath {
 	}
 
 	/// Returns the epoch duration in microseconds.
-	/// Note: The maximum UTC date would be approximately `292277-01-09 04:00:54 UTC`.
+	/// Note: The maximum UTC date would be approximately `2262-04-11`.
 	///       Thus, for all intents and purposes, it is far enough to not worry.
 	pub fn modified_us(&self) -> Result<i64> {
 		let modified = self.modified()?;
@@ -186,6 +186,16 @@ impl SPath {
 		let modified_us = since_the_epoch.as_micros().min(i64::MAX as u128) as i64;
 
 		Ok(modified_us)
+	}
+
+	/// Returns true if the internal path is absolute.
+	pub fn is_absolute(&self) -> bool {
+		self.path_buf.is_absolute()
+	}
+
+	/// Returns true if the internal path is relative.
+	pub fn is_relative(&self) -> bool {
+		self.path_buf.is_relative()
 	}
 }
 
