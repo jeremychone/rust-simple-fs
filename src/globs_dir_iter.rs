@@ -71,7 +71,7 @@ impl Iterator for GlobsDirIter {
 			if !self.globset.as_ref().is_none_or(|globset| globset.is_match(entry.path())) {
 				return None;
 			}
-			SPath::from_path_ok(entry.path())
+			SPath::from_std_path_ok(entry.path())
 		})
 	}
 }

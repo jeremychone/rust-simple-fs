@@ -1,4 +1,4 @@
-use crate::{Error, Result, SFile};
+use crate::{Error, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use pathdiff::diff_paths;
@@ -15,26 +15,21 @@ pub struct SPath {
 
 /// Constructors that guarantee the SPath contract described in the struct
 impl SPath {
-	/// Constructor for SPath accepting anything that implements Into<PathBuf>.
-	///
-	/// Note: This is quite ergonomic and allows for avoiding a PathBuf allocation
-	///       if a PathBuf is provided.
-	pub fn new(path: impl Into<PathBuf>) -> Result<Self> {
-		let path_buf = validate_spath_for_result(path)?;
+	/// Constructor for SPath accepting anything that implements Into<Utf8PathBuf>.
+	pub fn new(path: impl Into<Utf8PathBuf>) -> Self {
+		Self { path_buf: path.into() }
+	}
+
+	/// Constructor from standard PathBuf.
+	pub fn from_std_path_buf(path_buf: PathBuf) -> Result<Self> {
+		let path_buf = validate_spath_for_result(path_buf)?;
 		Ok(SPath::from(path_buf))
 	}
 
-	/// Constructor from Path and all impl AsRef<Path>.
-	///
-	/// Returns Result<SPath>
-	///
-	/// Note: Prefer the use of the SPath::try_from(...) or new when available as it might
-	///       avoid a PathBuf allocation.
-	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
+	/// Constructor from standard Path and all impl AsRef<Path>.
+	pub fn from_std_path(path: impl AsRef<Path>) -> Result<Self> {
 		let path = path.as_ref();
-
 		let path_buf = validate_spath_for_result(path)?;
-
 		Ok(SPath::from(path_buf))
 	}
 
@@ -48,19 +43,15 @@ impl SPath {
 	/// Constructor for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SPath>. Useful for filter_map.
-	///
-	/// Note: Favor using concrete type functions like `SPath::from_path_buf_ok`
-	///       when available.
-	pub fn from_path_ok(path: impl AsRef<Path>) -> Option<Self> {
+	pub fn from_std_path_ok(path: impl AsRef<Path>) -> Option<Self> {
 		let path = path.as_ref();
 		let path_buf = validate_spath_for_option(path)?;
-
 		Some(SPath::from(path_buf))
 	}
 
 	/// Constructed from PathBuf returns an Option, none if validation fails.
 	/// Useful for filter_map.
-	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
+	pub fn from_std_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		let path_buf = validate_spath_for_option(&path_buf)?;
 		Some(SPath::from(path_buf))
 	}
@@ -84,13 +75,18 @@ impl SPath {
 /// Public into path
 impl SPath {
 	/// Consumes the SPath and returns its PathBuf.
-	pub fn into_path_buf(self) -> PathBuf {
+	pub fn into_std_path_buf(self) -> PathBuf {
 		self.path_buf.into()
 	}
 
-	/// Returns a reference to the internal Path.
-	pub fn path(&self) -> &Path {
+	/// Returns a reference to the internal std Path.
+	pub fn std_path(&self) -> &Path {
 		self.path_buf.as_std_path()
+	}
+
+	/// Returns a reference to the internal Utf8Path.
+	pub fn path(&self) -> &Utf8Path {
+		&self.path_buf
 	}
 }
 
@@ -166,7 +162,7 @@ impl SPath {
 
 	/// Returns the path.metadata modified.
 	pub fn modified(&self) -> Result<SystemTime> {
-		let path = self.path();
+		let path = self.std_path();
 		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
 		let last_modified = metadata
 			.modified()
@@ -204,38 +200,46 @@ impl SPath {
 	pub fn canonicalize(&self) -> Result<SPath> {
 		let path = self
 			.path_buf
-			.canonicalize()
-			.map_err(|err| Error::CannotCanonicalize((self.path(), err).into()))?;
-		SPath::new(path)
+			.canonicalize_utf8()
+			.map_err(|err| Error::CannotCanonicalize((self.std_path(), err).into()))?;
+		Ok(SPath::new(path))
 	}
 
 	/// Returns the parent directory as an Option<SPath>.
 	pub fn parent(&self) -> Option<SPath> {
-		self.path().parent().and_then(SPath::from_path_ok)
+		self.path_buf.parent().map(SPath::from)
 	}
 
-	/// Joins the provided leaf_path with the current path and returns an SPath.
-	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+	/// Joins the provided path with the current path and returns an SPath.
+	pub fn join(&self, leaf_path: impl Into<Utf8PathBuf>) -> SPath {
+		let path_buf = self.path_buf.join(leaf_path.into());
+		SPath::from(path_buf)
+	}
+
+	/// Joins a standard Path to the path of this SPath.
+	pub fn join_std_path(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
-		let joined = self.path().join(leaf_path);
+		let joined = self.std_path().join(leaf_path);
 		let path_buf = validate_spath_for_result(joined)?;
 		Ok(SPath::from(path_buf))
 	}
 
-	/// Joins a valid UTF-8 string to the path of this SPath.
-	/// Returns - The joined SPath as it is guaranteed to be UTF-8.
-	pub fn join_str(&self, leaf_path: &str) -> SPath {
-		let path_buf = self.path_buf.join(leaf_path);
-		SPath::from(path_buf)
+	/// Creates a new sibling SPath with the given leaf_path.
+	pub fn new_sibling(&self, leaf_path: impl AsRef<str>) -> SPath {
+		let leaf_path = leaf_path.as_ref();
+		match self.path_buf.parent() {
+			Some(parent_dir) => SPath::new(parent_dir.join(leaf_path)),
+			None => SPath::new(leaf_path),
+		}
 	}
 
-	/// Creates a new sibling SPath with the given leaf_path.
-	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+	/// Creates a new sibling SPath with the given standard path.
+	pub fn new_sibling_std_path(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
 		let leaf_path = leaf_path.as_ref();
 
-		match self.path().parent() {
-			Some(parent_dir) => SPath::new(parent_dir.join(leaf_path)),
-			None => SPath::from_path(leaf_path),
+		match self.std_path().parent() {
+			Some(parent_dir) => SPath::from_std_path(parent_dir.join(leaf_path)),
+			None => SPath::from_std_path(leaf_path),
 		}
 	}
 
@@ -243,13 +247,13 @@ impl SPath {
 	// Note: This does not resolve the path to the file system.
 	//       It is safe to use on a non-existent path.
 	//
-	// TODO: Currently, we need to find a path cleaner that takes a string.
+	// TODO: Currently, we need to find a path cleaner that takes a Utf8Path.
 	//       This way, we do not have to perform these gymnastics.
 	pub fn clean(&self) -> SPath {
 		let path_buf = path_clean::clean(self);
 		// Note: Here we can assume the result PathBuf is UTF8 compatible
 		//       So, return empty Path cannot make it a spath
-		SPath::from_path_buf_ok(path_buf).unwrap_or_else(|| SPath::from(""))
+		SPath::from_std_path_buf_ok(path_buf).unwrap_or_else(|| SPath::from(""))
 	}
 
 	pub fn diff(&self, base: impl AsRef<Path>) -> Result<SPath> {
@@ -260,7 +264,7 @@ impl SPath {
 			base: base.to_string_lossy().to_string(),
 		})?;
 
-		SPath::new(diff_path)
+		SPath::from_std_path_buf(diff_path)
 	}
 }
 
@@ -294,6 +298,12 @@ impl AsRef<Utf8Path> for SPath {
 	}
 }
 
+impl AsRef<str> for SPath {
+	fn as_ref(&self) -> &str {
+		self.to_str()
+	}
+}
+
 // endregion: --- AsRefs
 
 // region:    --- Froms (into other types)
@@ -312,13 +322,19 @@ impl From<&SPath> for String {
 
 impl From<SPath> for PathBuf {
 	fn from(val: SPath) -> Self {
-		val.into_path_buf()
+		val.into_std_path_buf()
 	}
 }
 
 impl From<&SPath> for PathBuf {
 	fn from(val: &SPath) -> Self {
 		val.path_buf.clone().into()
+	}
+}
+
+impl From<SPath> for Utf8PathBuf {
+	fn from(val: SPath) -> Self {
+		val.path_buf
 	}
 }
 
@@ -335,12 +351,6 @@ impl From<Utf8PathBuf> for SPath {
 impl From<&Utf8Path> for SPath {
 	fn from(path: &Utf8Path) -> Self {
 		SPath { path_buf: path.into() }
-	}
-}
-
-impl From<SFile> for SPath {
-	fn from(sfile: SFile) -> Self {
-		SPath { path_buf: sfile.into() }
 	}
 }
 
@@ -375,27 +385,21 @@ impl From<&str> for SPath {
 impl TryFrom<PathBuf> for SPath {
 	type Error = Error;
 	fn try_from(path_buf: PathBuf) -> Result<SPath> {
-		let path_buf = validate_spath_for_result(&path_buf)?;
-
-		Ok(SPath::from(path_buf))
+		SPath::from_std_path_buf(path_buf)
 	}
 }
 
 impl TryFrom<fs::DirEntry> for SPath {
 	type Error = Error;
 	fn try_from(fs_entry: fs::DirEntry) -> Result<SPath> {
-		let path_buf = validate_spath_for_result(fs_entry.path())?;
-
-		Ok(SPath::from(path_buf))
+		SPath::from_std_path_buf(fs_entry.path())
 	}
 }
 
 impl TryFrom<walkdir::DirEntry> for SPath {
 	type Error = Error;
 	fn try_from(wd_entry: walkdir::DirEntry) -> Result<SPath> {
-		let path_buf = validate_spath_for_result(wd_entry.path())?;
-
-		Ok(SPath::from(path_buf))
+		SPath::from_std_path(wd_entry.path())
 	}
 }
 

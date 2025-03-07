@@ -14,7 +14,10 @@
 
 ## API Changes
 
+- `0.6.x` (rc for now)
+  - Now use Utf8 by default, std path moved to `..std_path..` naming. 
 - `0.5.0`
+  - Internal use camino, utf8path. 
   - Reimplementation of the iter_files iterator, supporting absolute path globs out of the base directory. 
 - `0.4.0`
   - Update to `notify 8` (should not have any API changes)

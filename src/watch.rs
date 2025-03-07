@@ -1,6 +1,6 @@
 use crate::{Error, Result, SPath};
 use notify::{self, RecommendedWatcher, RecursiveMode};
-use notify_debouncer_full::{new_debouncer, DebounceEventHandler, DebounceEventResult, Debouncer, RecommendedCache};
+use notify_debouncer_full::{DebounceEventHandler, DebounceEventResult, Debouncer, RecommendedCache, new_debouncer};
 use std::path::Path;
 // use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
@@ -123,7 +123,7 @@ fn build_sevents(events: Vec<DebouncedEvent>) -> Vec<SEvent> {
 		let skind = SEventKind::from(event.kind);
 
 		for path in event.paths {
-			if let Some(spath) = SPath::from_path_buf_ok(path) {
+			if let Some(spath) = SPath::from_std_path_buf_ok(path) {
 				let key = SEventKey {
 					spath_string: spath.to_string(),
 					skind: skind.clone(),

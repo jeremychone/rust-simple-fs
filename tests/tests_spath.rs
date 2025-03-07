@@ -16,11 +16,11 @@ fn test_spath_spath_new_sibling() -> Result<()> {
 
 	// -- Exec & Check
 	for data in fx_data.iter() {
-		let original_path = SPath::new(data.0)?;
-		let sibling_leaf_path = SPath::new(data.1)?;
-		let expected_path = SPath::new(data.2)?;
+		let original_path = SPath::new(data.0);
+		let sibling_leaf_path = SPath::new(data.1);
+		let expected_path = SPath::new(data.2);
 
-		let actual_path = original_path.new_sibling(&sibling_leaf_path)?;
+		let actual_path = original_path.new_sibling(sibling_leaf_path);
 
 		assert_eq!(actual_path.to_str(), expected_path.to_str());
 	}
@@ -47,12 +47,12 @@ fn test_spath_spath_diff() -> Result<()> {
 
 	// -- Exec & Check
 	for data in fx_data.iter() {
-		let base_path = SPath::new(data.0)?;
-		let target_path = SPath::new(data.1)?;
-		let expected_path = SPath::new(data.2)?;
+		let base_path = SPath::new(data.0);
+		let target_path = SPath::new(data.1);
+		let expected_path = SPath::new(data.2);
 
 		let diff_path = target_path.diff(&base_path)?;
-		let rejoined_path = base_path.join(&diff_path)?.clean();
+		let rejoined_path = base_path.join(&diff_path).clean();
 
 		assert_eq!(diff_path.to_str(), expected_path.to_str());
 		assert_eq!(rejoined_path.to_str(), target_path.to_str());

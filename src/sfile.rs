@@ -19,29 +19,24 @@ pub struct SFile {
 
 /// Constructors that guarantee the SFile contract described in the struct
 impl SFile {
-	/// Constructor for SFile accepting anything that implements Into<PathBuf>.
-	///
-	/// Note: This is quite ergonomic and allows for avoiding a PathBuf allocation
-	///       if a PathBuf is provided.
-	pub fn new(path: impl Into<PathBuf>) -> Result<Self> {
-		let path = SPath::new(path)?;
-
+	/// Constructor for SFile accepting anything that implements Into<Utf8PathBuf>.
+	pub fn new(path: impl Into<Utf8PathBuf>) -> Result<Self> {
+		let path = SPath::new(path);
 		validate_sfile_for_result(&path)?;
-
 		Ok(Self { path })
 	}
 
-	/// Constructor from File and all impl AsRef<Path>.
-	///
-	/// Returns Result<SFile>
-	///
-	/// Note: Prefers the use of the SPath::try_from(...) when available, as it might
-	///       avoid a PathBuf allocation.
-	pub fn from_path(path: impl AsRef<Path>) -> Result<Self> {
-		let path = SPath::from_path(path)?;
-
+	/// Constructor from standard PathBuf.
+	pub fn from_std_path_buf(path_buf: PathBuf) -> Result<Self> {
+		let path = SPath::from_std_path_buf(path_buf)?;
 		validate_sfile_for_result(&path)?;
+		Ok(Self { path })
+	}
 
+	/// Constructor from standard Path and all impl AsRef<Path>.
+	pub fn from_std_path(path: impl AsRef<Path>) -> Result<Self> {
+		let path = SPath::from_std_path(path)?;
+		validate_sfile_for_result(&path)?;
 		Ok(Self { path })
 	}
 
@@ -55,21 +50,16 @@ impl SFile {
 	/// Constructors for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SFile>. Useful for filter_map.
-	///
-	/// Note: Favor using concrete type functions like `SPath::from_path_buf_ok`
-	///       when available.
-	pub fn from_path_ok(path: impl AsRef<Path>) -> Option<Self> {
-		let path = SPath::from_path_ok(path)?;
+	pub fn from_std_path_ok(path: impl AsRef<Path>) -> Option<Self> {
+		let path = SPath::from_std_path_ok(path)?;
 		validate_sfile_for_option(&path)?;
-
 		Some(Self { path })
 	}
 
 	/// Constructor from PathBuf returning an Option, none if validation fails.
 	/// Useful for filter_map.
-	pub fn from_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
-		let path = SPath::from_path_buf_ok(path_buf)?;
-
+	pub fn from_std_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
+		let path = SPath::from_std_path_buf_ok(path_buf)?;
 		validate_sfile_for_option(&path)?;
 		Some(Self { path })
 	}
@@ -94,13 +84,18 @@ impl SFile {
 /// Public into path
 impl SFile {
 	/// Consumes the SFile and returns its PathBuf.
-	pub fn into_path_buf(self) -> PathBuf {
-		self.path.into_path_buf()
+	pub fn into_std_path_buf(self) -> PathBuf {
+		self.path.into_std_path_buf()
 	}
 
-	/// Returns a reference to the internal Path.
-	pub fn path(&self) -> &Path {
-		self.path.path()
+	/// Returns a reference to the internal standard Path.
+	pub fn std_path(&self) -> &Path {
+		self.path.std_path()
+	}
+
+	/// Returns a reference to the internal Utf8Path.
+	pub fn path(&self) -> &SPath {
+		&self.path
 	}
 }
 
@@ -173,7 +168,7 @@ impl SFile {
 	///       `i64::MAX` is returned. `i64::MAX` represents 8,388,607 terabytes,
 	///       providing ample margin before it becomes a concern.
 	pub fn file_size(&self) -> Result<i64> {
-		let path = self.path();
+		let path = self.std_path();
 		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
 		let size = match metadata.len().try_into() {
 			Ok(v) => v,
@@ -211,21 +206,25 @@ impl SFile {
 	///
 	/// This method creates a new path by joining the existing path with a specified leaf_path
 	/// and returns the result as an SPath.
-	pub fn join(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+	pub fn join(&self, leaf_path: impl Into<Utf8PathBuf>) -> SPath {
 		self.path.join(leaf_path)
 	}
 
-	/// Joins a valid UTF-8 string to the path of this SFile.
-	/// Returns - The joined SPath as it is guaranteed to be UTF-8.
-	pub fn join_str(&self, leaf_path: &str) -> SPath {
-		self.path.join_str(leaf_path)
+	/// Joins a standard Path to the path of this SFile.
+	pub fn join_std_path(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		self.path.join_std_path(leaf_path)
 	}
 
 	/// Creates a new sibling path with the specified leaf_path.
 	///
 	/// Generates a new path in the same parent directory as the current file, appending the leaf_path.
-	pub fn new_sibling(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+	pub fn new_sibling(&self, leaf_path: &str) -> SPath {
 		self.path.new_sibling(leaf_path)
+	}
+
+	/// Creates a new sibling path with the specified standard path.
+	pub fn new_sibling_std_path(&self, leaf_path: impl AsRef<Path>) -> Result<SPath> {
+		self.path.new_sibling_std_path(leaf_path)
 	}
 
 	// Return a clean version of the path (meaning resolve the "../../").
@@ -270,6 +269,18 @@ impl AsRef<Utf8Path> for SFile {
 	}
 }
 
+impl AsRef<str> for SFile {
+	fn as_ref(&self) -> &str {
+		self.to_str()
+	}
+}
+
+impl AsRef<SPath> for SFile {
+	fn as_ref(&self) -> &SPath {
+		&self.path
+	}
+}
+
 // endregion: --- AsRefs
 
 // region:    --- Froms
@@ -288,19 +299,31 @@ impl From<&SFile> for String {
 
 impl From<SFile> for PathBuf {
 	fn from(val: SFile) -> Self {
-		val.into_path_buf()
+		val.into_std_path_buf()
 	}
 }
 
 impl From<&SFile> for PathBuf {
 	fn from(val: &SFile) -> Self {
-		val.path().to_path_buf()
+		val.std_path().to_path_buf()
 	}
 }
 
 impl From<SFile> for Utf8PathBuf {
 	fn from(val: SFile) -> Self {
 		val.path.path_buf
+	}
+}
+
+impl From<SFile> for SPath {
+	fn from(val: SFile) -> Self {
+		val.path
+	}
+}
+
+impl From<&SFile> for SPath {
+	fn from(val: &SFile) -> Self {
+		val.path.clone()
 	}
 }
 
@@ -313,7 +336,6 @@ impl TryFrom<&str> for SFile {
 	fn try_from(path: &str) -> Result<SFile> {
 		let path = SPath::from(path);
 		validate_sfile_for_result(&path)?;
-
 		Ok(Self { path })
 	}
 }
@@ -335,10 +357,7 @@ impl TryFrom<&String> for SFile {
 impl TryFrom<PathBuf> for SFile {
 	type Error = Error;
 	fn try_from(path_buf: PathBuf) -> Result<SFile> {
-		let path = SPath::try_from(path_buf)?;
-		validate_sfile_for_result(&path)?;
-
-		Ok(Self { path })
+		SFile::from_std_path_buf(path_buf)
 	}
 }
 
@@ -347,7 +366,6 @@ impl TryFrom<fs::DirEntry> for SFile {
 	fn try_from(fs_entry: fs::DirEntry) -> Result<SFile> {
 		let path = SPath::try_from(fs_entry)?;
 		validate_sfile_for_result(&path)?;
-
 		Ok(Self { path })
 	}
 }
@@ -357,7 +375,6 @@ impl TryFrom<walkdir::DirEntry> for SFile {
 	fn try_from(wd_entry: walkdir::DirEntry) -> Result<SFile> {
 		let path = SPath::try_from(wd_entry)?;
 		validate_sfile_for_result(&path)?;
-
 		Ok(Self { path })
 	}
 }
@@ -366,7 +383,6 @@ impl TryFrom<SPath> for SFile {
 	type Error = Error;
 	fn try_from(path: SPath) -> Result<SFile> {
 		validate_sfile_for_result(&path)?;
-
 		Ok(Self { path })
 	}
 }
@@ -384,11 +400,7 @@ fn validate_sfile_for_result(path: &SPath) -> Result<()> {
 
 /// Validate but without generating an error (good for the _ok constructors)
 fn validate_sfile_for_option(path: &SPath) -> Option<()> {
-	if path.is_file() {
-		Some(())
-	} else {
-		None
-	}
+	if path.is_file() { Some(()) } else { None }
 }
 
 // endregion: --- File Validation

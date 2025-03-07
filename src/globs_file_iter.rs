@@ -16,7 +16,7 @@ impl GlobsFileIter {
 		list_options: Option<ListOptions<'_>>,
 	) -> Result<Self> {
 		// main_base for relative globs comes from the directory passed in
-		let main_base = SPath::from_path(dir.as_ref())?;
+		let main_base = SPath::from_std_path(dir.as_ref())?;
 		// if no globs provided, default to ["**"]
 		let globs: Vec<&str> = match include_globs {
 			Some(g) => g.to_vec(),
@@ -54,7 +54,7 @@ impl GlobsFileIter {
 				.max_depth(depth)
 				.into_iter()
 				.filter_entry(move |e| {
-					let Ok(path) = SPath::from_path(e.path()) else {
+					let Ok(path) = SPath::from_std_path(e.path()) else {
 						return false;
 					};
 					// This uses the walkdir file_type which does not make a system call
@@ -108,7 +108,7 @@ impl GlobsFileIter {
 		// Use scan to keep track of absolute file paths and remove duplicates.
 		let dedup_iter = combined_iter
 			.scan(HashSet::new(), |seen, file| {
-				let path_str = file.path().to_string_lossy().to_string();
+				let path_str = file.to_string();
 				if seen.contains(&path_str) {
 					Some(None)
 				} else {
@@ -141,7 +141,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 		let path = Path::new(glob);
 		if path.is_absolute() {
 			let base_path = longest_base_path_wild_free(glob);
-			let abs_base = SPath::from_path(base_path)?;
+			let abs_base = SPath::from_std_path(base_path)?;
 			let rel_pattern = relative_from_absolute(glob, &abs_base);
 			// Add to groups: if exists with same base, push; else create new.
 			if let Some((_, patterns)) = groups.iter_mut().find(|(b, _)| b.to_str() == abs_base.to_str()) {
