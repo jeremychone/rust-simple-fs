@@ -1,7 +1,7 @@
 [package]
 name = "simple-fs"
-version = "0.5.5-WIP"
-edition = "2021"
+version = "0.6.0-WIP"
+edition = "2024"
 authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Simple and convenient API for File System access"

@@ -1,5 +1,5 @@
-use crate::glob::{get_glob_set, longest_base_path_wild_free, DEFAULT_EXCLUDE_GLOBS};
-use crate::{get_depth, ListOptions, Result, SFile, SPath};
+use crate::glob::{DEFAULT_EXCLUDE_GLOBS, get_glob_set, longest_base_path_wild_free};
+use crate::{ListOptions, Result, SFile, SPath, get_depth};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
@@ -88,7 +88,7 @@ impl GlobsFileIter {
 				};
 
 				// Exclude files if they match the global exclude globs
-				if let Some(ref exclude) = exclude_globs_set_clone.as_ref() {
+				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
 					if exclude.is_match(&rel_path) {
 						return false;
 					}
@@ -184,7 +184,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 	let mut final_groups: Vec<(SPath, Vec<String>)> = Vec::new();
 	for (base, patterns) in groups {
 		let mut merged = false;
-		for (ref mut existing_base, ref mut existing_patterns) in final_groups.iter_mut() {
+		for (existing_base, existing_patterns) in final_groups.iter_mut() {
 			if is_prefix(existing_base, &base) {
 				// 'base' is a subdirectory of 'existing_base'
 				let diff = safe_diff(&base, existing_base);
