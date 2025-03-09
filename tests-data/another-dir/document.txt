@@ -1,0 +1,1 @@
+A text document in a different first-level directory.
