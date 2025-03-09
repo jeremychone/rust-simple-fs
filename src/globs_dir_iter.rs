@@ -12,7 +12,8 @@ impl GlobsDirIter {
 	///
 	/// - `dir`: the starting directory.
 	/// - `include_globs`: optional slice of glob patterns. If provided, only directories whose
-	///    full path matches at least one pattern will be returned.
+	///    full path matches at least one pattern will be returned. Patterns starting with `!`
+	///    are treated as exclusion patterns.
 	/// - `list_options`: optional list options, e.g., limiting recursion depth.
 	///
 	/// Returns a Result with GlobsDirIter or an appropriate Error.
@@ -23,17 +24,75 @@ impl GlobsDirIter {
 	) -> Result<Self> {
 		let base_dir = SPath::from_std_path(dir.as_ref())?;
 
+		// Process include_globs to separate includes and negated excludes (starting with !)
+		let (include_patterns, negated_excludes) = if let Some(globs) = include_globs {
+			let mut includes = Vec::new();
+			let mut excludes = Vec::new();
+
+			for &pattern in globs {
+				if let Some(negative_pattern) = pattern.strip_prefix("!") {
+					excludes.push(negative_pattern);
+				} else {
+					includes.push(pattern);
+				}
+			}
+
+			// If all patterns were negated, use a default include pattern
+			if includes.is_empty() && !excludes.is_empty() {
+				(vec!["**"], excludes)
+			} else {
+				(includes, excludes)
+			}
+		} else {
+			(vec![], Vec::new())
+		};
+
+		// Create or extend the ListOptions with negated_excludes
+		let list_options = if !negated_excludes.is_empty() {
+			match list_options {
+				Some(opts) => {
+					let mut new_opts = ListOptions {
+						exclude_globs: opts.exclude_globs.clone(),
+						relative_glob: opts.relative_glob,
+						depth: opts.depth,
+					};
+
+					if let Some(existing_excludes) = &mut new_opts.exclude_globs {
+						// Append negated excludes to existing excludes
+						let mut combined = existing_excludes.clone();
+						combined.extend(negated_excludes);
+						new_opts.exclude_globs = Some(combined);
+					} else {
+						// Create new excludes from negated patterns
+						new_opts.exclude_globs = Some(negated_excludes);
+					}
+
+					Some(new_opts)
+				}
+				None => {
+					// Create a new ListOptions with just the negated excludes
+					Some(ListOptions {
+						exclude_globs: Some(negated_excludes),
+						relative_glob: false,
+						depth: None,
+					})
+				}
+			}
+		} else {
+			list_options
+		};
+
 		// Build the include GlobSet from provided patterns if any
-		let include_globset = if let Some(globs) = include_globs {
+		let include_globset = if !include_patterns.is_empty() {
 			let mut builder = GlobSetBuilder::new();
-			for pattern in globs {
+			for pattern in include_patterns.iter() {
 				builder.add(Glob::new(pattern).map_err(|e| Error::GlobCantNew {
 					glob: pattern.to_string(),
 					cause: e,
 				})?);
 			}
 			Some(builder.build().map_err(|e| Error::GlobSetCantBuild {
-				globs: globs.iter().map(|s| s.to_string()).collect(),
+				globs: include_patterns.iter().map(|&s| s.to_string()).collect(),
 				cause: e,
 			})?)
 		} else {
