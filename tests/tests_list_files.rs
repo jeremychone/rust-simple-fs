@@ -255,6 +255,213 @@ fn test_list_iter_files_nested_and_exclude_ok() -> Result<()> {
 	Ok(())
 }
 
+#[test]
+fn test_list_files_with_negative_glob() -> Result<()> {
+	// -- Exec
+	// Include all markdown files but exclude those in dir2
+	let res = list_files(
+		"./tests-data/",
+		Some(&["./tests-data/**/*.md", "!./tests-data/**/dir2/**"]),
+		None,
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert_eq!(res.len(), 5, "Should have 5 markdown files (excluding dir2)");
+
+	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
+	assert!(
+		res_paths.contains(&"./tests-data/dir1/file3.md"),
+		"Should contain dir1/file3.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/file5.md"),
+		"Should not contain dir1/dir2/file5.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/dir3/file7.md"),
+		"Should not contain dir1/dir2/dir3/file7.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/notes.md"),
+		"Should contain another-dir/notes.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/sub-dir/example.md"),
+		"Should contain another-dir/sub-dir/example.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/sub-dir/deep-folder/final.md"),
+		"Should contain another-dir/sub-dir/deep-folder/final.md"
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_list_files_with_multiple_negative_globs() -> Result<()> {
+	// -- Exec
+	// Include all markdown files but exclude multiple patterns
+	let res = list_files(
+		"./tests-data/",
+		Some(&[
+			"./tests-data/**/*.md",       // Include all markdown files
+			"!./tests-data/**/dir2/**",   // Exclude dir2 files
+			"!./tests-data/**/*final.md", // Exclude final.md files
+		]),
+		None,
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert_eq!(res.len(), 4, "Should have 4 markdown files after multiple exclusions");
+
+	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
+	assert!(
+		res_paths.contains(&"./tests-data/dir1/file3.md"),
+		"Should contain dir1/file3.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/file5.md"),
+		"Should not contain dir1/dir2/file5.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/dir3/file7.md"),
+		"Should not contain dir1/dir2/dir3/file7.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/notes.md"),
+		"Should contain another-dir/notes.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/sub-dir/example.md"),
+		"Should contain another-dir/sub-dir/example.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/another-dir/sub-dir/deep-folder/final.md"),
+		"Should not contain another-dir/sub-dir/deep-folder/final.md"
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_list_files_with_only_negative_globs() -> Result<()> {
+	// -- Exec
+	// Only use negative patterns (should default to ** for includes)
+	let res = list_files(
+		"./tests-data/",
+		Some(&[
+			"!./tests-data/**/*.txt", // Exclude all txt files
+		]),
+		None,
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert!(res.len() >= 7, "Should have at least 7 files after excluding txt files");
+
+	// Ensure no txt files are included
+	assert!(
+		!res_paths.iter().any(|p| p.ends_with(".txt")),
+		"Should not contain any .txt files"
+	);
+
+	// Check for md files as a sanity check
+	assert!(res_paths.iter().any(|p| p.ends_with(".md")), "Should contain .md files");
+
+	Ok(())
+}
+
+#[test]
+fn test_list_files_relative_negative_glob() -> Result<()> {
+	// -- Exec
+	// Use relative globs with negative patterns
+	let res = list_files(
+		"./tests-data/",
+		Some(&[
+			"**/*.md",     // Include all markdown files
+			"!**/dir2/**", // Exclude dir2 files (using relative glob)
+		]),
+		Some(ListOptions::from_relative_glob(true)),
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert_eq!(res.len(), 5, "Should have 5 markdown files (excluding dir2)");
+
+	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
+	assert!(
+		res_paths.contains(&"./tests-data/dir1/file3.md"),
+		"Should contain dir1/file3.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/file5.md"),
+		"Should not contain dir1/dir2/file5.md"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/dir3/file7.md"),
+		"Should not contain dir1/dir2/dir3/file7.md"
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_list_files_with_combined_exclusion_methods() -> Result<()> {
+	// -- Exec
+	// Combine both ListOptions exclude_globs and negative patterns in include_globs
+	let list_options = ListOptions::default()
+		.with_exclude_globs(&["**/deep-folder/**"]) // Exclude deep-folder files via ListOptions
+		.with_relative_glob(); // Use relative glob mode
+
+	let res = list_files(
+		"./tests-data/",
+		Some(&[
+			"**/*.md",     // Include all markdown files
+			"!**/dir2/**", // Exclude dir2 files via negative pattern
+		]),
+		Some(list_options),
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert_eq!(res.len(), 4, "Should have 4 markdown files after combined exclusions");
+
+	// Files that should be included
+	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
+	assert!(
+		res_paths.contains(&"./tests-data/dir1/file3.md"),
+		"Should contain dir1/file3.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/notes.md"),
+		"Should contain another-dir/notes.md"
+	);
+	assert!(
+		res_paths.contains(&"./tests-data/another-dir/sub-dir/example.md"),
+		"Should contain another-dir/sub-dir/example.md"
+	);
+
+	// Files that should be excluded by negative pattern
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/file5.md"),
+		"Should not contain dir1/dir2/file5.md (excluded by negative pattern)"
+	);
+	assert!(
+		!res_paths.contains(&"./tests-data/dir1/dir2/dir3/file7.md"),
+		"Should not contain dir1/dir2/dir3/file7.md (excluded by negative pattern)"
+	);
+
+	// Files that should be excluded by ListOptions
+	assert!(
+		!res_paths.contains(&"./tests-data/another-dir/sub-dir/deep-folder/final.md"),
+		"Should not contain another-dir/sub-dir/deep-folder/final.md (excluded by ListOptions)"
+	);
+
+	Ok(())
+}
+
 // region:    --- Support
 
 /// Reusable function for checking markdown files in test-data directory

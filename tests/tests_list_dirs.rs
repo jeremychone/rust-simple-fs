@@ -197,3 +197,101 @@ fn test_list_dirs_absolute_path() -> Result<()> {
 
 	Ok(())
 }
+
+#[test]
+fn test_list_dirs_with_negative_glob() -> Result<()> {
+	// -- Exec: List directories with a negative (exclusion) pattern in include_globs.
+	let dirs = list_dirs(
+		"./tests-data/",
+		Some(&["**", "!**/dir2"]), // Include all directories but exclude dir2
+		None
+	)?;
+
+	// -- Check: Ensure excluded directories are not in the results.
+	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert!(
+		dir_paths.contains(&"./tests-data/dir1"),
+		"Should contain dir1"
+	);
+	assert!(
+		!dir_paths.contains(&"./tests-data/dir1/dir2"),
+		"Should not contain dir1/dir2"
+	);
+	assert!(
+		dir_paths.contains(&"./tests-data/another-dir"),
+		"Should contain another-dir"
+	);
+	assert!(
+		dir_paths.contains(&"./tests-data/another-dir/sub-dir"),
+		"Should contain another-dir/sub-dir"
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_list_dirs_with_multiple_negative_globs() -> Result<()> {
+	// -- Exec: List directories with multiple negative patterns in include_globs.
+	let dirs = list_dirs(
+		"./tests-data/",
+		Some(&[
+			"**",               // Include all directories
+			"!**/dir2",         // Exclude dir2
+			"!**/deep-folder"   // Exclude deep-folder
+		]),
+		None
+	)?;
+
+	// -- Check: Ensure all excluded directories are not in the results.
+	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert!(
+		dir_paths.contains(&"./tests-data/dir1"),
+		"Should contain dir1"
+	);
+	assert!(
+		!dir_paths.contains(&"./tests-data/dir1/dir2"),
+		"Should not contain dir1/dir2"
+	);
+	assert!(
+		dir_paths.contains(&"./tests-data/another-dir"),
+		"Should contain another-dir"
+	);
+	assert!(
+		dir_paths.contains(&"./tests-data/another-dir/sub-dir"),
+		"Should contain another-dir/sub-dir"
+	);
+	assert!(
+		!dir_paths.contains(&"./tests-data/another-dir/sub-dir/deep-folder"),
+		"Should not contain another-dir/sub-dir/deep-folder"
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_list_dirs_with_only_negative_globs() -> Result<()> {
+	// -- Exec: List directories with only negative patterns (should default to "**" for includes).
+	let dirs = list_dirs(
+		"./tests-data/",
+		Some(&["!**/dir2", "!**/deep-folder"]), // Only exclusion patterns
+		None
+	)?;
+
+	// -- Check: Verify filtering works with only negative patterns.
+	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	assert!(
+		dir_paths.contains(&"./tests-data/dir1"),
+		"Should contain dir1"
+	);
+	assert!(
+		!dir_paths.contains(&"./tests-data/dir1/dir2"),
+		"Should not contain dir1/dir2"
+	);
+	assert!(
+		!dir_paths.contains(&"./tests-data/another-dir/sub-dir/deep-folder"),
+		"Should not contain another-dir/sub-dir/deep-folder"
+	);
+
+	Ok(())
+}
+

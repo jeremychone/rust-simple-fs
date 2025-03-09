@@ -79,6 +79,9 @@ impl GlobsFileIter {
 		// Process the globs into groups: each group is a (base_dir, Vec<relative glob>)
 		let groups = process_globs(&main_base, &include_patterns)?;
 
+		// Get the relative_glob setting from list_options
+		let use_relative_glob = list_options.as_ref().is_some_and(|o| o.relative_glob);
+
 		// Prepare exclude globs applied uniformly on each group
 		let exclude_globs_raw: Option<&[&str]> = list_options.as_ref().and_then(|o| o.exclude_globs());
 		let exclude_globs_set = exclude_globs_raw
@@ -118,7 +121,14 @@ impl GlobsFileIter {
 						// If it's a directory, check the excludes.
 						// NOTE 1: It is important not to glob check the includes for directories, as they will always fail.
 						if let Some(exclude_globs) = exclude_globs_set_clone.as_ref() {
-							// stop this path down if it is a match with the exclude
+							// Check with proper path handling based on relative_glob setting
+							if use_relative_glob {
+								if let Ok(rel_path) = path.diff(&base_clone) {
+									let stop = exclude_globs.is_match(&rel_path);
+									return !stop;
+								}
+							}
+							// Check with absolute path if relative path not available or relative_glob is false
 							let stop = exclude_globs.is_match(&path);
 							!stop
 						} else {
@@ -133,19 +143,29 @@ impl GlobsFileIter {
 				.filter_map(SFile::from_walkdir_entry_ok);
 
 			let exclude_globs_set_clone = exclude_globs_set.clone();
+			let main_base_clone = main_base.clone();
+			let base_clone = group_base.clone();
 			let iter = iter.filter(move |sfile| {
+				// First check if the file should be excluded by the exclude_globs
+				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
+					// Use appropriate path based on relative_glob setting
+					if use_relative_glob {
+						if let Ok(rel_path) = sfile.diff(&main_base_clone) {
+							if exclude.is_match(&rel_path) {
+								return false;
+							}
+						}
+					} else if exclude.is_match(sfile) {
+						return false;
+					}
+				}
+
 				// Always compute the relative path based on the group base
 				let rel_path = match sfile.diff(base_clone.path()) {
 					Ok(p) => p,
 					Err(_) => return false,
 				};
 
-				// Exclude files if they match the global exclude globs
-				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
-					if exclude.is_match(&rel_path) {
-						return false;
-					}
-				}
 				// Accept only those files that match the group's globset
 				globset.is_match(rel_path)
 			});
