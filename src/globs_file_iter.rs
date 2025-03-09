@@ -17,14 +17,67 @@ impl GlobsFileIter {
 	) -> Result<Self> {
 		// main_base for relative globs comes from the directory passed in
 		let main_base = SPath::from_std_path(dir.as_ref())?;
-		// if no globs provided, default to ["**"]
-		let globs: Vec<&str> = match include_globs {
-			Some(g) => g.to_vec(),
-			None => vec!["**"],
+
+		// Process include_globs to separate includes and negated excludes (starting with !)
+		let (include_patterns, negated_excludes) = if let Some(globs) = include_globs {
+			let mut includes = Vec::new();
+			let mut excludes = Vec::new();
+
+			for &pattern in globs {
+				if let Some(negative_pattern) = pattern.strip_prefix("!") {
+					excludes.push(negative_pattern);
+				} else {
+					includes.push(pattern);
+				}
+			}
+
+			// If all patterns were negated, use a default include pattern
+			if includes.is_empty() && !excludes.is_empty() {
+				(vec!["**"], excludes)
+			} else {
+				(includes, excludes)
+			}
+		} else {
+			(vec!["**"], Vec::new())
+		};
+
+		// Create or extend the ListOptions with negated_excludes
+		let list_options = if !negated_excludes.is_empty() {
+			match list_options {
+				Some(opts) => {
+					let mut new_opts = ListOptions {
+						exclude_globs: opts.exclude_globs.clone(),
+						relative_glob: opts.relative_glob,
+						depth: opts.depth,
+					};
+
+					if let Some(existing_excludes) = &mut new_opts.exclude_globs {
+						// Append negated excludes to existing excludes
+						let mut combined = existing_excludes.clone();
+						combined.extend(negated_excludes);
+						new_opts.exclude_globs = Some(combined);
+					} else {
+						// Create new excludes from negated patterns
+						new_opts.exclude_globs = Some(negated_excludes);
+					}
+
+					Some(new_opts)
+				}
+				None => {
+					// Create a new ListOptions with just the negated excludes
+					Some(ListOptions {
+						exclude_globs: Some(negated_excludes),
+						relative_glob: false,
+						depth: None,
+					})
+				}
+			}
+		} else {
+			list_options
 		};
 
 		// Process the globs into groups: each group is a (base_dir, Vec<relative glob>)
-		let groups = process_globs(&main_base, &globs)?;
+		let groups = process_globs(&main_base, &include_patterns)?;
 
 		// Prepare exclude globs applied uniformly on each group
 		let exclude_globs_raw: Option<&[&str]> = list_options.as_ref().and_then(|o| o.exclude_globs());
