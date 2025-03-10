@@ -95,8 +95,14 @@ impl SPath {
 	/// Returns the &str of the path.
 	///
 	/// NOTE: We know that this must be Some() since the SPath constructor guarantees that
-	///       the path.to_str() is valid.
+	///       the path.as_str() is valid.
+	#[deprecated(note = "use as_str()")]
 	pub fn to_str(&self) -> &str {
+		self.path_buf.as_str()
+	}
+
+	/// Returns the &str of the path.
+	pub fn as_str(&self) -> &str {
 		self.path_buf.as_str()
 	}
 
@@ -295,7 +301,7 @@ impl SPath {
 
 impl fmt::Display for SPath {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.to_str())
+		write!(f, "{}", self.as_str())
 	}
 }
 
@@ -323,7 +329,7 @@ impl AsRef<Utf8Path> for SPath {
 
 impl AsRef<str> for SPath {
 	fn as_ref(&self) -> &str {
-		self.to_str()
+		self.as_str()
 	}
 }
 
@@ -333,13 +339,13 @@ impl AsRef<str> for SPath {
 
 impl From<SPath> for String {
 	fn from(val: SPath) -> Self {
-		val.to_str().to_string()
+		val.as_str().to_string()
 	}
 }
 
 impl From<&SPath> for String {
 	fn from(val: &SPath) -> Self {
-		val.to_str().to_string()
+		val.as_str().to_string()
 	}
 }
 

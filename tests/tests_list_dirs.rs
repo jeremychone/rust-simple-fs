@@ -15,7 +15,7 @@ fn test_iter_dirs_list_dirs() -> Result<()> {
 
 	// -- Check: Each returned entry must be a directory.
 	for dir in dirs {
-		assert!(dir.is_dir(), "Expected {} to be a directory", dir.to_str());
+		assert!(dir.is_dir(), "Expected {} to be a directory", dir.as_str());
 	}
 
 	Ok(())
@@ -27,11 +27,8 @@ fn test_list_dirs_one_level_dotted() -> Result<()> {
 	let dirs = list_dirs("./tests-data/", None, None)?;
 
 	// -- Check: Ensure we find the expected directories.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		dir_paths.contains(&"./tests-data/another-dir"),
 		"Should contain another-dir"
@@ -46,12 +43,9 @@ fn test_list_dirs_with_glob_pattern() -> Result<()> {
 	let dirs = list_dirs("./tests-data/", Some(&["./tests-data/dir1"]), None)?;
 
 	// -- Check: Ensure we only find directories matching the pattern.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(dirs.len(), 1, "Should have 1 directory matching 'dir1'");
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		!dir_paths.contains(&"./tests-data/another-dir"),
 		"Should not contain another-dir"
@@ -70,16 +64,13 @@ fn test_list_dirs_with_relative_glob() -> Result<()> {
 	)?;
 
 	// -- Check: Ensure we only find directories matching the pattern.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(dirs.len(), 1, "Should have 1 directory matching 'another-dir'");
 	assert!(
 		dir_paths.contains(&"./tests-data/another-dir"),
 		"Should contain another-dir"
 	);
-	assert!(
-		!dir_paths.contains(&"./tests-data/dir1"),
-		"Should not contain dir1"
-	);
+	assert!(!dir_paths.contains(&"./tests-data/dir1"), "Should not contain dir1");
 
 	Ok(())
 }
@@ -90,11 +81,8 @@ fn test_list_dirs_recursive() -> Result<()> {
 	let dirs = list_dirs("./tests-data/", Some(&["./tests-data/**"]), None)?;
 
 	// -- Check: Ensure we find all the expected directories.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		dir_paths.contains(&"./tests-data/dir1/dir2"),
 		"Should contain dir1/dir2"
@@ -124,16 +112,13 @@ fn test_list_dirs_with_exclude_option() -> Result<()> {
 	// -- Exec: List directories with exclusion pattern.
 	let list_options = ListOptions::default()
 		.with_exclude_globs(&["**/dir2", "**/dir2/**"])
-		.with_relative_glob();  // Add relative_glob for proper pattern matching
-	
+		.with_relative_glob(); // Add relative_glob for proper pattern matching
+
 	let dirs = list_dirs("./tests-data/", Some(&["**"]), Some(list_options))?;
 
 	// -- Check: Ensure excluded directories are not in the results.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		!dir_paths.contains(&"./tests-data/dir1/dir2"),
 		"Should not contain dir1/dir2"
@@ -154,16 +139,13 @@ fn test_list_dirs_with_exclude_option() -> Result<()> {
 fn test_iter_dirs_functionality() -> Result<()> {
 	// -- Exec: Use iter_dirs to create an iterator over directories.
 	let dir_iter = iter_dirs("./tests-data/", None, None)?;
-	
+
 	// -- Check: Convert iterator to vector and verify results.
 	let dirs: Vec<_> = dir_iter.collect();
 	assert!(dirs.len() >= 2, "Should have at least 2 directories");
-	
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		dir_paths.contains(&"./tests-data/another-dir"),
 		"Should contain another-dir"
@@ -183,17 +165,11 @@ fn test_list_dirs_absolute_path() -> Result<()> {
 		dirs.len() >= 2,
 		"Should have at least 2 directories using absolute path"
 	);
-	
+
 	// Get the directory names for easier comparison
 	let dir_names: Vec<_> = dirs.iter().map(|p| p.name()).collect();
-	assert!(
-		dir_names.contains(&"dir1"),
-		"Should contain dir1"
-	);
-	assert!(
-		dir_names.contains(&"another-dir"),
-		"Should contain another-dir"
-	);
+	assert!(dir_names.contains(&"dir1"), "Should contain dir1");
+	assert!(dir_names.contains(&"another-dir"), "Should contain another-dir");
 
 	Ok(())
 }
@@ -204,15 +180,12 @@ fn test_list_dirs_with_negative_glob() -> Result<()> {
 	let dirs = list_dirs(
 		"./tests-data/",
 		Some(&["**", "!**/dir2"]), // Include all directories but exclude dir2
-		None
+		None,
 	)?;
 
 	// -- Check: Ensure excluded directories are not in the results.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		!dir_paths.contains(&"./tests-data/dir1/dir2"),
 		"Should not contain dir1/dir2"
@@ -235,19 +208,16 @@ fn test_list_dirs_with_multiple_negative_globs() -> Result<()> {
 	let dirs = list_dirs(
 		"./tests-data/",
 		Some(&[
-			"**",               // Include all directories
-			"!**/dir2",         // Exclude dir2
-			"!**/deep-folder"   // Exclude deep-folder
+			"**",              // Include all directories
+			"!**/dir2",        // Exclude dir2
+			"!**/deep-folder", // Exclude deep-folder
 		]),
-		None
+		None,
 	)?;
 
 	// -- Check: Ensure all excluded directories are not in the results.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		!dir_paths.contains(&"./tests-data/dir1/dir2"),
 		"Should not contain dir1/dir2"
@@ -274,15 +244,12 @@ fn test_list_dirs_with_only_negative_globs() -> Result<()> {
 	let dirs = list_dirs(
 		"./tests-data/",
 		Some(&["!**/dir2", "!**/deep-folder"]), // Only exclusion patterns
-		None
+		None,
 	)?;
 
 	// -- Check: Verify filtering works with only negative patterns.
-	let dir_paths = dirs.iter().map(|p| p.to_str()).collect::<Vec<_>>();
-	assert!(
-		dir_paths.contains(&"./tests-data/dir1"),
-		"Should contain dir1"
-	);
+	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		!dir_paths.contains(&"./tests-data/dir1/dir2"),
 		"Should not contain dir1/dir2"
@@ -294,4 +261,3 @@ fn test_list_dirs_with_only_negative_globs() -> Result<()> {
 
 	Ok(())
 }
-

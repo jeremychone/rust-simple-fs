@@ -8,7 +8,7 @@ fn test_list_files_one_level_dotted() -> Result<()> {
 	let res = list_files("./tests-data/", Some(&["./tests-data/*.txt"]), None)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 1, "Should have 1 file with *.txt in tests-data");
 	assert!(
 		res_paths.contains(&"./tests-data/file2.txt"),
@@ -33,7 +33,7 @@ fn test_list_files_rel_one_level_dotted() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 1, "Should have 1 file with *.txt in tests-data");
 	assert!(
 		res_paths.iter().any(|p| p.ends_with("file2.txt")),
@@ -75,7 +75,7 @@ fn test_list_files_one_file_dotted() -> Result<()> {
 	let res = list_files("./tests-data", Some(&["./tests-data/file1.md"]), None)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 1, "Should have 1 file");
 	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
 
@@ -88,7 +88,7 @@ fn test_list_files_sub_level_dotted() -> Result<()> {
 	let res = list_files("./tests-data/", Some(&["./tests-data/**/*.md"]), None)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_md_files_res(&res_paths);
 
 	Ok(())
@@ -100,7 +100,7 @@ fn test_list_files_sub_dir_full_path() -> Result<()> {
 	let res = list_files("./tests-data/dir1/", Some(&["./tests-data/dir1/**/*.md"]), None)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res_paths.len(), 3, "Should have 3 markdown files in dir1");
 	assert!(
 		res_paths.contains(&"./tests-data/dir1/file3.md"),
@@ -129,7 +129,7 @@ fn test_list_files_sub_dir_rel_glob() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_md_files_res(&res_paths);
 
 	Ok(())
@@ -150,7 +150,7 @@ fn test_list_files_absolute_wildcard() -> Result<()> {
 
 	// -- Check
 	// Check that at least one file's path ends with "file1.md"
-	let found = files.iter().any(|p| p.to_str().ends_with("file1.md"));
+	let found = files.iter().any(|p| p.as_str().ends_with("file1.md"));
 	assert!(found, "Expected to find file1.md file with wildcard absolute pattern");
 
 	Ok(())
@@ -172,7 +172,7 @@ fn test_list_files_absolute_direct() -> Result<()> {
 	// -- Check
 	assert_eq!(files.len(), 1, "Should have exactly one file with exact match");
 
-	let returned_path = files[0].to_str();
+	let returned_path = files[0].as_str();
 	assert_eq!(
 		returned_path, file_abs_str,
 		"The file path should match the absolute file path"
@@ -190,7 +190,7 @@ fn test_list_files_mixed_absolute_and_relative_globs() -> Result<()> {
 	let res = list_files("./", Some(&patterns), None)?;
 
 	// -- Check
-	let res_paths: Vec<&str> = res.iter().map(|p| p.to_str()).collect();
+	let res_paths: Vec<&str> = res.iter().map(|p| p.as_str()).collect();
 	assert_eq!(res.len(), 2, "Expected both files to be found using mixed patterns");
 	assert!(
 		res_paths.iter().any(|&p| p.ends_with("file1.md")),
@@ -216,7 +216,7 @@ fn test_list_files_mixed_absolute_and_relative_globs_with_relative_option() -> R
 	)?;
 
 	// -- Check
-	let res_paths: Vec<&str> = res.iter().map(|p| p.to_str()).collect();
+	let res_paths: Vec<&str> = res.iter().map(|p| p.as_str()).collect();
 	assert!(
 		res.len() >= 6,
 		"Expected at least 6 files to be found using mixed patterns with relative_glob option"
@@ -266,7 +266,7 @@ fn test_list_files_with_negative_glob() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 5, "Should have 5 markdown files (excluding dir2)");
 
 	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
@@ -313,7 +313,7 @@ fn test_list_files_with_multiple_negative_globs() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 4, "Should have 4 markdown files after multiple exclusions");
 
 	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
@@ -358,7 +358,7 @@ fn test_list_files_with_only_negative_globs() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert!(res.len() >= 7, "Should have at least 7 files after excluding txt files");
 
 	// Ensure no txt files are included
@@ -387,7 +387,7 @@ fn test_list_files_relative_negative_glob() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 5, "Should have 5 markdown files (excluding dir2)");
 
 	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
@@ -425,7 +425,7 @@ fn test_list_files_with_combined_exclusion_methods() -> Result<()> {
 	)?;
 
 	// -- Check
-	let res_paths = res.iter().map(|p| p.to_str()).collect::<Vec<_>>();
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
 	assert_eq!(res.len(), 4, "Should have 4 markdown files after combined exclusions");
 
 	// Files that should be included

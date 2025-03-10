@@ -217,7 +217,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 			let abs_base = SPath::from_std_path(base_path)?;
 			let rel_pattern = relative_from_absolute(glob, &abs_base);
 			// Add to groups: if exists with same base, push; else create new.
-			if let Some((_, patterns)) = groups.iter_mut().find(|(b, _)| b.to_str() == abs_base.to_str()) {
+			if let Some((_, patterns)) = groups.iter_mut().find(|(b, _)| b.as_str() == abs_base.as_str()) {
 				patterns.push(rel_pattern);
 			} else {
 				groups.push((abs_base, vec![rel_pattern]));
@@ -226,7 +226,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 			// Remove any leading "./" from the glob
 			let cleaned = glob.trim_start_matches("./").to_string();
 			// Normalize the relative glob by stripping the main_base prefix if present.
-			let base_candidate: &str = main_base.to_str();
+			let base_candidate: &str = main_base.as_str();
 			let base_str_cleaned = {
 				let s = base_candidate.trim_start_matches("./");
 				if s.is_empty() {
@@ -253,7 +253,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 
 	// Merge groups with common base directories.
 	// Sort groups by base path length (shorter first).
-	groups.sort_by_key(|(base, _)| base.to_str().len());
+	groups.sort_by_key(|(base, _)| base.as_str().len());
 	let mut final_groups: Vec<(SPath, Vec<String>)> = Vec::new();
 	for (base, patterns) in groups {
 		let mut merged = false;
@@ -299,8 +299,8 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 
 /// Helper function to check if 'prefix' is a prefix of 'path'
 fn is_prefix(prefix: &SPath, path: &SPath) -> bool {
-	let prefix_str = prefix.to_str();
-	let path_str = path.to_str();
+	let prefix_str = prefix.as_str();
+	let path_str = path.as_str();
 	if path_str == prefix_str {
 		return true;
 	}
@@ -313,13 +313,13 @@ fn is_prefix(prefix: &SPath, path: &SPath) -> bool {
 
 /// Helper function to safely compute the diff, returning an empty string on error.
 fn safe_diff(path: &SPath, base: &SPath) -> String {
-	path.diff(base.path()).map(|p| p.to_str().to_string()).unwrap_or_default()
+	path.diff(base.path()).map(|p| p.as_str().to_string()).unwrap_or_default()
 }
 
 /// Given an absolute glob pattern and its computed base, returns the relative glob
 /// by removing the base prefix and any leading path separator.
 fn relative_from_absolute(glob: &str, group_base: &SPath) -> String {
-	let base_str = group_base.to_str();
+	let base_str = group_base.as_str();
 	let rel = glob.strip_prefix(base_str).unwrap_or(glob);
 	rel.trim_start_matches(std::path::MAIN_SEPARATOR).to_string()
 }

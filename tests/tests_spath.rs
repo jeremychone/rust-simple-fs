@@ -22,7 +22,7 @@ fn test_spath_spath_new_sibling() -> Result<()> {
 
 		let actual_path = original_path.new_sibling(sibling_leaf_path);
 
-		assert_eq!(actual_path.to_str(), expected_path.to_str());
+		assert_eq!(actual_path.as_str(), expected_path.as_str());
 	}
 
 	Ok(())
@@ -54,8 +54,8 @@ fn test_spath_spath_diff() -> Result<()> {
 		let diff_path = target_path.diff(&base_path).ok_or("Should have diff")?;
 		let rejoined_path = base_path.join(&diff_path).normalize();
 
-		assert_eq!(diff_path.to_str(), expected_path.to_str());
-		assert_eq!(rejoined_path.to_str(), target_path.to_str());
+		assert_eq!(diff_path.as_str(), expected_path.as_str());
+		assert_eq!(rejoined_path.as_str(), target_path.as_str());
 	}
 
 	Ok(())

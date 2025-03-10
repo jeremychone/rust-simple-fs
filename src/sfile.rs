@@ -104,9 +104,14 @@ impl SFile {
 	/// Returns the &str of the path.
 	///
 	/// NOTE: We know that this must be Some() since the SFile constructor guarantees that
-	///       the path.to_str() is valid.
+	///       the path.as_str() is valid.
+	#[deprecated(note = "Use `as_str()` instead")]
 	pub fn to_str(&self) -> &str {
-		self.path.to_str()
+		self.path.as_str()
+	}
+
+	pub fn as_str(&self) -> &str {
+		self.path.as_str()
 	}
 
 	/// Returns the Option<&str> representation of the `path.file_name()`.
@@ -279,7 +284,7 @@ impl AsRef<Path> for SFile {
 
 impl fmt::Display for SFile {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(f, "{}", self.to_str())
+		write!(f, "{}", self.as_str())
 	}
 }
 
@@ -301,7 +306,7 @@ impl AsRef<Utf8Path> for SFile {
 
 impl AsRef<str> for SFile {
 	fn as_ref(&self) -> &str {
-		self.to_str()
+		self.as_str()
 	}
 }
 
@@ -317,13 +322,13 @@ impl AsRef<SPath> for SFile {
 
 impl From<SFile> for String {
 	fn from(val: SFile) -> Self {
-		val.to_str().to_string()
+		val.as_str().to_string()
 	}
 }
 
 impl From<&SFile> for String {
 	fn from(val: &SFile) -> Self {
-		val.to_str().to_string()
+		val.as_str().to_string()
 	}
 }
 
@@ -424,7 +429,7 @@ fn validate_sfile_for_result(path: &SPath) -> Result<()> {
 	if path.is_file() {
 		Ok(())
 	} else {
-		Err(Error::FileNotFound(path.to_str().to_string()))
+		Err(Error::FileNotFound(path.as_str().to_string()))
 	}
 }
 
