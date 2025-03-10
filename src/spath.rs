@@ -197,12 +197,44 @@ impl SPath {
 
 /// Transformers
 impl SPath {
+	/// This perform a OS Canonicalization.
 	pub fn canonicalize(&self) -> Result<SPath> {
 		let path = self
 			.path_buf
 			.canonicalize_utf8()
 			.map_err(|err| Error::CannotCanonicalize((self.std_path(), err).into()))?;
 		Ok(SPath::new(path))
+	}
+
+	/// Normalize a path without performing I/O.
+	///
+	/// All redundant separator and up-level references are collapsed.
+	///
+	/// However, this does not resolve links.
+	pub fn normalize(&self) -> SPath {
+		crate::normalize(self)
+	}
+
+	/// Same as [`normalize`] but consume and create a new SPath only if needed
+	pub fn into_normalized(self) -> SPath {
+		if self.is_normalized() { self } else { self.normalize() }
+	}
+
+	/// Same as [`normalize`] except that if
+	/// `Component::Prefix`/`Component::RootDir` is encountered,
+	/// or if the path points outside of current dir, returns `None`.
+	pub fn try_normalize(&self) -> Option<SPath> {
+		crate::try_normalize(self)
+	}
+
+	/// Return `true` if the path is normalized.
+	///
+	/// # Quirk
+	///
+	/// If the path does not start with `./` but contains `./` in the middle,
+	/// then this function might returns `true`.
+	pub fn is_normalized(&self) -> bool {
+		crate::is_normalized(self)
 	}
 
 	/// Returns the parent directory as an Option<SPath>.

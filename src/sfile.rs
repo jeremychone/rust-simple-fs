@@ -197,6 +197,39 @@ impl SFile {
 		Ok(SFile { path })
 	}
 
+	/// Normalize a path without performing I/O.
+	///
+	/// All redundant separator and up-level references are collapsed.
+	///
+	/// However, this does not resolve links.
+	pub fn normalize(&self) -> SFile {
+		SFile {
+			path: crate::normalize(self),
+		}
+	}
+
+	/// Same as [`normalize`] but consume and create a new SPath only if needed
+	pub fn into_normalized(self) -> SFile {
+		if self.is_normalized() { self } else { self.normalize() }
+	}
+
+	/// Same as [`normalize`] except that if
+	/// `Component::Prefix`/`Component::RootDir` is encountered,
+	/// or if the path points outside of current dir, returns `None`.
+	pub fn try_normalize(&self) -> Option<SFile> {
+		crate::try_normalize(self).map(|path| SFile { path })
+	}
+
+	/// Return `true` if the path is normalized.
+	///
+	/// # Quirk
+	///
+	/// If the path does not start with `./` but contains `./` in the middle,
+	/// then this function might returns `true`.
+	pub fn is_normalized(&self) -> bool {
+		crate::is_normalized(self)
+	}
+
 	/// Returns the parent directory as SPath, if available.
 	pub fn parent(&self) -> Option<SPath> {
 		self.path.parent()
