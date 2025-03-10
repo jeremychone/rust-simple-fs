@@ -260,15 +260,12 @@ impl SFile {
 		self.path.new_sibling_std_path(leaf_path)
 	}
 
-	// Return a clean version of the path (meaning resolve the "../../").
-	// Note: This does not resolve the path to the file system.
-	//       So safe to use on a non-existent path.
-	pub fn clean(&self) -> SPath {
-		self.path.clean()
+	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
+		self.path.diff(base)
 	}
 
-	pub fn diff(&self, base: impl AsRef<Path>) -> Result<SPath> {
-		self.path.diff(base)
+	pub fn try_diff(&self, base: impl AsRef<Utf8Path>) -> Result<SPath> {
+		self.path.try_diff(base)
 	}
 }
 

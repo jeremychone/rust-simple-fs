@@ -145,7 +145,7 @@ impl GlobsDirIter {
 				if let Some(ref exclude_set) = exclude_globset {
 					// Handle relative or absolute paths for exclude patterns
 					if use_relative_glob {
-						if let Ok(rel_path) = path.diff(&base_dir) {
+						if let Some(rel_path) = path.diff(&base_dir) {
 							if exclude_set.is_match(rel_path) {
 								return false;
 							}
@@ -159,7 +159,7 @@ impl GlobsDirIter {
 				if let Some(ref include_set) = include_globset {
 					// Handle relative or absolute paths for include patterns
 					if use_relative_glob {
-						if let Ok(rel_path) = path.diff(&base_dir) {
+						if let Some(rel_path) = path.diff(&base_dir) {
 							include_set.is_match(rel_path)
 						} else {
 							false

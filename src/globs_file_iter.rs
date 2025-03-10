@@ -123,7 +123,7 @@ impl GlobsFileIter {
 						if let Some(exclude_globs) = exclude_globs_set_clone.as_ref() {
 							// Check with proper path handling based on relative_glob setting
 							if use_relative_glob {
-								if let Ok(rel_path) = path.diff(&base_clone) {
+								if let Some(rel_path) = path.diff(&base_clone) {
 									let stop = exclude_globs.is_match(&rel_path);
 									return !stop;
 								}
@@ -150,7 +150,7 @@ impl GlobsFileIter {
 				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
 					// Use appropriate path based on relative_glob setting
 					if use_relative_glob {
-						if let Ok(rel_path) = sfile.diff(&main_base_clone) {
+						if let Some(rel_path) = sfile.diff(&main_base_clone) {
 							if exclude.is_match(&rel_path) {
 								return false;
 							}
@@ -162,8 +162,8 @@ impl GlobsFileIter {
 
 				// Always compute the relative path based on the group base
 				let rel_path = match sfile.diff(base_clone.path()) {
-					Ok(p) => p,
-					Err(_) => return false,
+					Some(p) => p,
+					None => return false,
 				};
 
 				// Accept only those files that match the group's globset

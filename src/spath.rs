@@ -1,7 +1,7 @@
 use crate::{Error, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
-use pathdiff::diff_paths;
+use pathdiff::diff_utf8_paths;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -275,28 +275,19 @@ impl SPath {
 		}
 	}
 
-	// Returns a clean version of the path (resolves the "../../" components).
-	// Note: This does not resolve the path to the file system.
-	//       It is safe to use on a non-existent path.
-	//
-	// TODO: Currently, we need to find a path cleaner that takes a Utf8Path.
-	//       This way, we do not have to perform these gymnastics.
-	pub fn clean(&self) -> SPath {
-		let path_buf = path_clean::clean(self);
-		// Note: Here we can assume the result PathBuf is UTF8 compatible
-		//       So, return empty Path cannot make it a spath
-		SPath::from_std_path_buf_ok(path_buf).unwrap_or_else(|| SPath::from(""))
-	}
-
-	pub fn diff(&self, base: impl AsRef<Path>) -> Result<SPath> {
+	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
 		let base = base.as_ref();
 
-		let diff_path = diff_paths(self, base).ok_or_else(|| Error::CannotDiff {
-			path: self.to_string(),
-			base: base.to_string_lossy().to_string(),
-		})?;
+		let diff_path = diff_utf8_paths(self, base);
 
-		SPath::from_std_path_buf(diff_path)
+		diff_path.map(SPath::from)
+	}
+
+	pub fn try_diff(&self, base: impl AsRef<Utf8Path>) -> Result<SPath> {
+		self.diff(&base).ok_or_else(|| Error::CannotDiff {
+			path: self.to_string(),
+			base: base.as_ref().to_string(),
+		})
 	}
 }
 
