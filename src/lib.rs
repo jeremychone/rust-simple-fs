@@ -1,5 +1,6 @@
 // region:    --- Modules
 
+mod collapser;
 mod dir;
 mod error;
 mod file;
@@ -9,7 +10,6 @@ mod globs_file_iter;
 mod iter_dirs;
 mod iter_files;
 mod list_options;
-mod normalizer;
 mod sfile;
 mod spath;
 mod watch;
@@ -25,13 +25,13 @@ pub use self::error::{Error, Result};
 
 // -- Re-export everything for the root crate
 
+pub use collapser::*;
 pub use dir::*;
 pub use file::*;
 pub use glob::*;
 pub use iter_dirs::*;
 pub use iter_files::*;
 pub use list_options::*;
-pub use normalizer::*;
 pub use sfile::*;
 pub use spath::*;
 pub use watch::*;

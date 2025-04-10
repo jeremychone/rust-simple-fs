@@ -18,8 +18,8 @@
   - Now use Utf8 by default, std path moved to `..std_path..` naming. 
   - `!` deprecate '.to_str()' now '.as_str()'
   - `!` .diff(..) - Now take AsRef Utf8Path, return Option<SPath> (use try_diff(..) for Result)
-  - `+` Add `normalize`, `into_normalized`, `is_normalized`, `try_normalize`
-  - `!` `.clean(..)` is replaced by `.normalize()`
+  - `+` Add `collapse`, `into_collapsed`, `is_collapsed`, `try_collapse`
+  - `!` `.clean(..)` is replaced by `.collapse()`
   - `+` list/iter files/dirs - add support for negative glob patterns in include_globs (convenience)
   - `!` API CHANGE - now all default to Utf8Path (from camino crate). `std_path...()` for the std path
   - `^` sfile/spath - add is_absolute/is_relative passthrough

@@ -52,7 +52,7 @@ fn test_spath_spath_diff() -> Result<()> {
 		let expected_path = SPath::new(data.2);
 
 		let diff_path = target_path.diff(&base_path).ok_or("Should have diff")?;
-		let rejoined_path = base_path.join(&diff_path).normalize();
+		let rejoined_path = base_path.join(&diff_path).collapse();
 
 		assert_eq!(diff_path.as_str(), expected_path.as_str());
 		assert_eq!(rejoined_path.as_str(), target_path.as_str());

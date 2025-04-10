@@ -1,16 +1,19 @@
-//! Normalizes Camino Utf8Path paths similarly to canonicalize, but without performing I/O.
+//! Collpase Camino Utf8Path paths similarly to canonicalize, but without performing I/O.
 //!
 //! Adapted from [cargo-binstall](https://github.com/cargo-bins/cargo-binstall/blob/main/crates/normalize-path/src/lib.rs)
 
 use crate::SPath;
 use camino::{Utf8Component, Utf8Path, Utf8PathBuf};
 
-/// Normalize a path without performing I/O.
+/// Collpase a path without performing I/O.
+///
+/// - Resolved the "../"
+/// - And the "./"
 ///
 /// All redundant separator and up-level references are collapsed.
 ///
 /// However, this does not resolve links.
-pub fn normalize(path: impl AsRef<Utf8Path>) -> SPath {
+pub fn collapse(path: impl AsRef<Utf8Path>) -> SPath {
 	let path = path.as_ref();
 	let mut components = path.components().peekable();
 	let mut ret = if let Some(c @ Utf8Component::Prefix(..)) = components.peek() {
@@ -40,10 +43,10 @@ pub fn normalize(path: impl AsRef<Utf8Path>) -> SPath {
 	ret.into()
 }
 
-/// Same as [`normalize`] except that if
+/// Same as [`collapse`] except that if
 /// `Component::Prefix`/`Component::RootDir` is encountered,
 /// or if the path points outside of current dir, returns `None`.
-pub fn try_normalize(path: impl AsRef<Utf8Path>) -> Option<SPath> {
+pub fn try_collapse(path: impl AsRef<Utf8Path>) -> Option<SPath> {
 	let path = path.as_ref();
 	let mut ret = Utf8PathBuf::new();
 
@@ -65,11 +68,11 @@ pub fn try_normalize(path: impl AsRef<Utf8Path>) -> Option<SPath> {
 	Some(ret.into())
 }
 
-/// Return `true` if the path is normalized.
+/// Return `true` if the path is collapsed.
 ///
 /// Note that if the path contains `/./` or `\.\` it will return false
 ///
-pub fn is_normalized(path: impl AsRef<Utf8Path>) -> bool {
+pub fn is_collapsed(path: impl AsRef<Utf8Path>) -> bool {
 	let path = path.as_ref();
 	let path_str = path.as_str();
 	if path_str.contains("/./") || path.as_str().contains("\\.\\") {
@@ -97,7 +100,29 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_normalizer_is_normalize_true() -> Result<()> {
+	fn test_collapser_collpase_ok() -> Result<()> {
+		// -- Setup & Fixtures
+		let data = &[
+			//
+			("some/path/../to/file.rs", "some/to/file.rs"),
+			("/some/../file.txt", "/file.txt"),
+			("some/../file.txt", "file.txt"),
+			("some/./file.txt", "some/file.txt"),
+			("/../../some-dir", "/some-dir"),
+		];
+
+		// -- Exec & Check
+		for (path, expected) in data {
+			// assert!(is_collapsed(path), "Should be collapsed '{path}'");
+			let res_path = collapse(path);
+			assert_eq!(res_path.as_str(), *expected, "Wrong normalization for path '{path}'");
+		}
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_collapser_is_collpased_true() -> Result<()> {
 		// -- Setup & Fixtures
 		let data = &[
 			//
@@ -110,14 +135,14 @@ mod tests {
 
 		// -- Exec & Check
 		for path in data {
-			assert!(is_normalized(path), "Should be normalized '{path}'");
+			assert!(is_collapsed(path), "Should be collapsed '{path}'");
 		}
 
 		Ok(())
 	}
 
 	#[test]
-	fn test_normalizer_is_normalize_false() -> Result<()> {
+	fn test_collapser_is_collpased_false() -> Result<()> {
 		// -- Setup & Fixtures
 		let data = &[
 			//
@@ -128,7 +153,7 @@ mod tests {
 
 		// -- Exec & Check
 		for path in data {
-			assert!(!is_normalized(path), "Should NOT be normalized '{path}'");
+			assert!(!is_collapsed(path), "Should NOT be collapsed '{path}'");
 		}
 
 		Ok(())

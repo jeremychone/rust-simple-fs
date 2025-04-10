@@ -202,37 +202,37 @@ impl SFile {
 		Ok(SFile { path })
 	}
 
-	/// Normalize a path without performing I/O.
+	/// Collpase a path without performing I/O.
 	///
 	/// All redundant separator and up-level references are collapsed.
 	///
 	/// However, this does not resolve links.
-	pub fn normalize(&self) -> SFile {
+	pub fn collapse(&self) -> SFile {
 		SFile {
-			path: crate::normalize(self),
+			path: crate::collapse(self),
 		}
 	}
 
-	/// Same as [`normalize`] but consume and create a new SPath only if needed
-	pub fn into_normalized(self) -> SFile {
-		if self.is_normalized() { self } else { self.normalize() }
+	/// Same as [`collapse`] but consume and create a new SPath only if needed
+	pub fn into_collapsed(self) -> SFile {
+		if self.is_collapsed() { self } else { self.collapse() }
 	}
 
-	/// Same as [`normalize`] except that if
+	/// Same as [`collapse`] except that if
 	/// `Component::Prefix`/`Component::RootDir` is encountered,
 	/// or if the path points outside of current dir, returns `None`.
-	pub fn try_normalize(&self) -> Option<SFile> {
-		crate::try_normalize(self).map(|path| SFile { path })
+	pub fn try_collapse(&self) -> Option<SFile> {
+		crate::try_collapse(self).map(|path| SFile { path })
 	}
 
-	/// Return `true` if the path is normalized.
+	/// Return `true` if the path is collapsed.
 	///
 	/// # Quirk
 	///
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
-	pub fn is_normalized(&self) -> bool {
-		crate::is_normalized(self)
+	pub fn is_collapsed(&self) -> bool {
+		crate::is_collapsed(self)
 	}
 
 	/// Returns the parent directory as SPath, if available.

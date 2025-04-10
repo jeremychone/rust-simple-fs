@@ -204,7 +204,7 @@ impl Iterator for GlobsFileIter {
 	}
 }
 
-/// Processes the provided globs into groups with normalized base directories.
+/// Processes the provided globs into groups with collapsed base directories.
 /// For relative globs, the pattern is adjusted to be relative to main_base.
 fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<String>)>> {
 	let mut groups: Vec<(SPath, Vec<String>)> = Vec::new();
@@ -225,7 +225,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 		} else {
 			// Remove any leading "./" from the glob
 			let cleaned = glob.trim_start_matches("./").to_string();
-			// Normalize the relative glob by stripping the main_base prefix if present.
+			// Collpase the relative glob by stripping the main_base prefix if present.
 			let base_candidate: &str = main_base.as_str();
 			let base_str_cleaned = {
 				let s = base_candidate.trim_start_matches("./");
