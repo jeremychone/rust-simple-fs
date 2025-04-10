@@ -12,8 +12,8 @@ impl GlobsDirIter {
 	///
 	/// - `dir`: the starting directory.
 	/// - `include_globs`: optional slice of glob patterns. If provided, only directories whose
-	///    full path matches at least one pattern will be returned. Patterns starting with `!`
-	///    are treated as exclusion patterns.
+	///   full path matches at least one pattern will be returned. Patterns starting with `!`
+	///   are treated as exclusion patterns.
 	/// - `list_options`: optional list options, e.g., limiting recursion depth.
 	///
 	/// Returns a Result with GlobsDirIter or an appropriate Error.
