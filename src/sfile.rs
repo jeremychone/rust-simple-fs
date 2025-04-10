@@ -1,5 +1,5 @@
-use crate::SPath;
 use crate::{Error, Result};
+use crate::{SPath, support};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use std::fs;
@@ -202,6 +202,36 @@ impl SFile {
 		Ok(SFile { path })
 	}
 
+	// region:    --- Normalize
+
+	/// Posix Normalize this SFile (if needed)
+	/// See `into_normalized` for details.
+	pub fn normalize(&self) -> Self {
+		self.clone().into_normalized()
+	}
+
+	/// Posix Normalize this SFile (if needed)
+	///
+	/// - All with `/` regardless of OS (works on windows with Rust)
+	/// - Remove redundant `/` or `\`
+	/// - Remve middle `/./`
+	///
+	/// IMPORTANT: Do not collapse path, meaning leave the `/../` as is.
+	///
+	pub fn into_normalized(self) -> SFile {
+		if support::needs_normalize(self.path.path()) {
+			SFile {
+				path: self.path.into_normalized(),
+			}
+		} else {
+			self
+		}
+	}
+
+	// endregion: --- Normalize
+
+	// region:    --- Collapse
+
 	/// Collpase a path without performing I/O.
 	///
 	/// All redundant separator and up-level references are collapsed.
@@ -209,7 +239,7 @@ impl SFile {
 	/// However, this does not resolve links.
 	pub fn collapse(&self) -> SFile {
 		SFile {
-			path: crate::collapse(self),
+			path: support::collapse(self),
 		}
 	}
 
@@ -222,7 +252,7 @@ impl SFile {
 	/// `Component::Prefix`/`Component::RootDir` is encountered,
 	/// or if the path points outside of current dir, returns `None`.
 	pub fn try_collapse(&self) -> Option<SFile> {
-		crate::try_collapse(self).map(|path| SFile { path })
+		support::try_collapse(self).map(|path| SFile { path })
 	}
 
 	/// Return `true` if the path is collapsed.
@@ -232,8 +262,12 @@ impl SFile {
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
 	pub fn is_collapsed(&self) -> bool {
-		crate::is_collapsed(self)
+		support::is_collapsed(self)
 	}
+
+	// endregion: --- Collapse
+
+	// region:    --- Parent & Join
 
 	/// Returns the parent directory as SPath, if available.
 	pub fn parent(&self) -> Option<SPath> {
@@ -265,6 +299,10 @@ impl SFile {
 		self.path.new_sibling_std_path(leaf_path)
 	}
 
+	// endregion: --- Parent & Join
+
+	// region:    --- Diff
+
 	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
 		self.path.diff(base)
 	}
@@ -272,6 +310,8 @@ impl SFile {
 	pub fn try_diff(&self, base: impl AsRef<Utf8Path>) -> Result<SPath> {
 		self.path.try_diff(base)
 	}
+
+	// endregion: --- Diff
 }
 
 // region:    --- Std Traits Impls

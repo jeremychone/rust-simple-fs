@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{Error, Result, support};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use pathdiff::diff_utf8_paths;
@@ -212,13 +212,46 @@ impl SPath {
 		Ok(SPath::new(path))
 	}
 
+	// region:    --- Normalize
+
+	/// Posix Normalize this SPath (if needed)
+	/// See `into_normalized` for details.
+	///
+	/// TODO: We could optimize this a little further by avoiding the original clone (just do the new alloc)
+	pub fn normalize(&self) -> Self {
+		let path_buf = support::into_normalized(self.path_buf.clone());
+		SPath { path_buf }
+	}
+
+	/// Posix Normalize this SPath (if needed)
+	///
+	/// - All with `/` regardless of OS (works on windows with Rust)
+	/// - Remove redundant `/` or `\`
+	/// - Remve middle `/./`
+	///
+	/// IMPORTANT: Do not collapse path, meaning leave the `/../` as is.
+	///
+	pub fn into_normalized(self) -> SPath {
+		if support::needs_normalize(self.path()) {
+			SPath {
+				path_buf: support::into_normalized(self.path_buf),
+			}
+		} else {
+			self
+		}
+	}
+
+	// endregion: --- Normalize
+
+	// region:    --- Collapse
+
 	/// Collapse a path without performing I/O.
 	///
 	/// All redundant separator and up-level references are collapsed.
 	///
 	/// However, this does not resolve links.
 	pub fn collapse(&self) -> SPath {
-		crate::collapse(self)
+		support::collapse(self)
 	}
 
 	/// Same as [`collapse`] but consume and create a new SPath only if needed
@@ -230,7 +263,7 @@ impl SPath {
 	/// `Component::Prefix`/`Component::RootDir` is encountered,
 	/// or if the path points outside of current dir, returns `None`.
 	pub fn try_collapse(&self) -> Option<SPath> {
-		crate::try_collapse(self)
+		support::try_collapse(self)
 	}
 
 	/// Return `true` if the path is collapsed.
@@ -240,8 +273,12 @@ impl SPath {
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
 	pub fn is_collapsed(&self) -> bool {
-		crate::is_collapsed(self)
+		support::is_collapsed(self)
 	}
+
+	// endregion: --- Collapse
+
+	// region:    --- Parent & Join
 
 	/// Returns the parent directory as an Option<SPath>.
 	pub fn parent(&self) -> Option<SPath> {
@@ -281,6 +318,10 @@ impl SPath {
 		}
 	}
 
+	// endregion: --- Parent & Join
+
+	// region:    --- Diff
+
 	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
 		let base = base.as_ref();
 
@@ -295,6 +336,8 @@ impl SPath {
 			base: base.as_ref().to_string(),
 		})
 	}
+
+	// endregion: --- Diff
 }
 
 // region:    --- Std Traits Impls

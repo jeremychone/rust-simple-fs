@@ -1,6 +1,5 @@
 // region:    --- Modules
 
-mod collapser;
 mod dir;
 mod error;
 mod file;
@@ -12,6 +11,7 @@ mod iter_files;
 mod list_options;
 mod sfile;
 mod spath;
+mod support;
 mod watch;
 
 #[cfg(feature = "bin-nums")]
@@ -25,7 +25,6 @@ pub use self::error::{Error, Result};
 
 // -- Re-export everything for the root crate
 
-pub use collapser::*;
 pub use dir::*;
 pub use file::*;
 pub use glob::*;
