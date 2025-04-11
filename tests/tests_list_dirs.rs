@@ -82,6 +82,7 @@ fn test_list_dirs_recursive() -> Result<()> {
 
 	// -- Check: Ensure we find all the expected directories.
 	let dir_paths = dirs.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	
 	assert!(dir_paths.contains(&"./tests-data/dir1"), "Should contain dir1");
 	assert!(
 		dir_paths.contains(&"./tests-data/dir1/dir2"),
