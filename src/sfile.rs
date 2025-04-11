@@ -304,11 +304,11 @@ impl SFile {
 	// region:    --- Diff
 
 	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
-		self.path.diff(base)
+		self.path.diff(base).map(SPath::into_normalized)
 	}
 
 	pub fn try_diff(&self, base: impl AsRef<Utf8Path>) -> Result<SPath> {
-		self.path.try_diff(base)
+		self.path.try_diff(base).map(SPath::into_normalized)
 	}
 
 	// endregion: --- Diff

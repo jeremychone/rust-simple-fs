@@ -113,6 +113,8 @@ impl GlobsFileIter {
 					let Ok(path) = SPath::from_std_path(e.path()) else {
 						return false;
 					};
+					let path = path.into_normalized();
+					
 					// This uses the walkdir file_type which does not make a system call
 					let is_dir = e.file_type().is_dir();
 
@@ -140,12 +142,15 @@ impl GlobsFileIter {
 				})
 				.filter_map(|entry| entry.ok())
 				.filter(|entry| entry.file_type().is_file())
-				.filter_map(SFile::from_walkdir_entry_ok);
+				.filter_map(SFile::from_walkdir_entry_ok)
+				.map(SFile::into_normalized);
 
 			let exclude_globs_set_clone = exclude_globs_set.clone();
 			let main_base_clone = main_base.clone();
 			let base_clone = group_base.clone();
+
 			let iter = iter.filter(move |sfile| {
+				
 				// First check if the file should be excluded by the exclude_globs
 				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
 					// Use appropriate path based on relative_glob setting
@@ -214,8 +219,9 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 		let path = Path::new(glob);
 		if path.is_absolute() {
 			let base_path = longest_base_path_wild_free(glob);
-			let abs_base = SPath::from_std_path(base_path)?;
+			let abs_base = SPath::from_std_path(base_path)?.into_normalized();
 			let rel_pattern = relative_from_absolute(glob, &abs_base);
+
 			// Add to groups: if exists with same base, push; else create new.
 			if let Some((_, patterns)) = groups.iter_mut().find(|(b, _)| b.as_str() == abs_base.as_str()) {
 				patterns.push(rel_pattern);
@@ -233,8 +239,8 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 					String::new()
 				} else {
 					let mut t = s.to_string();
-					if !t.ends_with(std::path::MAIN_SEPARATOR) {
-						t.push(std::path::MAIN_SEPARATOR);
+					if !t.ends_with("/") {
+						t.push('/');
 					}
 					t
 				}

@@ -16,11 +16,11 @@ fn test_spath_spath_new_sibling() -> Result<()> {
 
 	// -- Exec & Check
 	for data in fx_data.iter() {
-		let original_path = SPath::new(data.0);
-		let sibling_leaf_path = SPath::new(data.1);
-		let expected_path = SPath::new(data.2);
+		let original_path = SPath::new(data.0).into_normalized();
+		let sibling_leaf_path = SPath::new(data.1).into_normalized();
+		let expected_path = SPath::new(data.2).into_normalized();
 
-		let actual_path = original_path.new_sibling(sibling_leaf_path);
+		let actual_path = original_path.new_sibling(sibling_leaf_path).into_normalized();
 
 		assert_eq!(actual_path.as_str(), expected_path.as_str());
 	}
@@ -47,12 +47,12 @@ fn test_spath_spath_diff() -> Result<()> {
 
 	// -- Exec & Check
 	for data in fx_data.iter() {
-		let base_path = SPath::new(data.0);
-		let target_path = SPath::new(data.1);
-		let expected_path = SPath::new(data.2);
+		let base_path = SPath::new(data.0).into_normalized();
+		let target_path = SPath::new(data.1).into_normalized();
+		let expected_path = SPath::new(data.2).into_normalized();
 
-		let diff_path = target_path.diff(&base_path).ok_or("Should have diff")?;
-		let rejoined_path = base_path.join(&diff_path).collapse();
+		let diff_path = target_path.diff(&base_path).ok_or("Should have diff")?.into_normalized();
+		let rejoined_path = base_path.join(&diff_path).collapse().into_normalized();
 
 		assert_eq!(diff_path.as_str(), expected_path.as_str());
 		assert_eq!(rejoined_path.as_str(), target_path.as_str());
