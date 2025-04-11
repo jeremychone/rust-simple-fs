@@ -213,11 +213,10 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 	let mut relative_patterns: Vec<String> = Vec::new();
 
 	for &glob in globs {
-		let path = Path::new(glob);
-		if path.is_absolute() {
-			let base_path = longest_base_path_wild_free(glob);
-			let abs_base = SPath::from_std_path(base_path)?;
-			let rel_pattern = relative_from_absolute(glob, &abs_base);
+		let path_glob = SPath::new(glob);
+		if path_glob.is_absolute() {
+			let abs_base = longest_base_path_wild_free(&path_glob);
+			let rel_pattern = relative_from_absolute(&path_glob, &abs_base);
 
 			// Add to groups: if exists with same base, push; else create new.
 			if let Some((_, patterns)) = groups.iter_mut().find(|(b, _)| b.as_str() == abs_base.as_str()) {
@@ -321,8 +320,8 @@ fn safe_diff(path: &SPath, base: &SPath) -> String {
 
 /// Given an absolute glob pattern and its computed base, returns the relative glob
 /// by removing the base prefix and any leading path separator.
-fn relative_from_absolute(glob: &str, group_base: &SPath) -> String {
+fn relative_from_absolute(glob: &SPath, group_base: &SPath) -> String {
 	let base_str = group_base.as_str();
-	let rel = glob.strip_prefix(base_str).unwrap_or(glob);
+	let rel = glob.as_str().strip_prefix(base_str).unwrap_or(glob.as_str());
 	rel.trim_start_matches(std::path::MAIN_SEPARATOR).to_string()
 }

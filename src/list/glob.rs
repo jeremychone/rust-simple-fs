@@ -1,6 +1,6 @@
-use crate::{Error, Result, TOP_MAX_DEPTH};
+use crate::{Error, Result, SPath, TOP_MAX_DEPTH};
+use camino::Utf8PathBuf;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use std::path::{Path, PathBuf};
 
 pub const DEFAULT_EXCLUDE_GLOBS: &[&str] = &["**/.git", "**/.DS_Store", "**/target", "**/node_modules"];
 
@@ -27,9 +27,9 @@ pub fn get_glob_set(globs: &[&str]) -> Result<GlobSet> {
 	Ok(glob_set)
 }
 
-pub fn longest_base_path_wild_free(pattern: &str) -> PathBuf {
-	let path = Path::new(pattern);
-	let mut base_path = PathBuf::new();
+pub fn longest_base_path_wild_free(pattern: &SPath) -> SPath {
+	let path = Utf8PathBuf::from(pattern);
+	let mut base_path = Utf8PathBuf::new();
 
 	for component in path.components() {
 		let component_str = component.as_os_str().to_string_lossy();
@@ -39,7 +39,7 @@ pub fn longest_base_path_wild_free(pattern: &str) -> PathBuf {
 		base_path.push(component);
 	}
 
-	base_path
+	SPath::new(base_path)
 }
 
 /// Computes the maximum depth required for a set of glob patterns.
