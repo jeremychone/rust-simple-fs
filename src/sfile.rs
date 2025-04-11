@@ -1,5 +1,5 @@
+use crate::SPath;
 use crate::{Error, Result};
-use crate::{SPath, reshape};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use std::fs;
@@ -211,20 +211,13 @@ impl SFile {
 	/// However, this does not resolve links.
 	pub fn collapse(&self) -> SFile {
 		SFile {
-			path: reshape::collapse(self),
+			path: self.path.collapse(),
 		}
 	}
 
 	/// Same as [`collapse`] but consume and create a new SPath only if needed
 	pub fn into_collapsed(self) -> SFile {
 		if self.is_collapsed() { self } else { self.collapse() }
-	}
-
-	/// Same as [`collapse`] except that if
-	/// `Component::Prefix`/`Component::RootDir` is encountered,
-	/// or if the path points outside of current dir, returns `None`.
-	pub fn try_collapse(&self) -> Option<SFile> {
-		reshape::try_collapse(self).map(|path| SFile { path })
 	}
 
 	/// Return `true` if the path is collapsed.
@@ -234,7 +227,7 @@ impl SFile {
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
 	pub fn is_collapsed(&self) -> bool {
-		reshape::is_collapsed(self)
+		crate::is_collapsed(self)
 	}
 
 	// endregion: --- Collapse

@@ -226,19 +226,13 @@ impl SPath {
 	///
 	/// However, this does not resolve links.
 	pub fn collapse(&self) -> SPath {
-		reshape::collapse(self)
+		let path_buf = crate::into_collapsed(self.path_buf.clone());
+		SPath::new(path_buf)
 	}
 
 	/// Same as [`collapse`] but consume and create a new SPath only if needed
 	pub fn into_collapsed(self) -> SPath {
 		if self.is_collapsed() { self } else { self.collapse() }
-	}
-
-	/// Same as [`collapse`] except that if
-	/// `Component::Prefix`/`Component::RootDir` is encountered,
-	/// or if the path points outside of current dir, returns `None`.
-	pub fn try_collapse(&self) -> Option<SPath> {
-		reshape::try_collapse(self)
 	}
 
 	/// Return `true` if the path is collapsed.
@@ -248,7 +242,7 @@ impl SPath {
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
 	pub fn is_collapsed(&self) -> bool {
-		reshape::is_collapsed(self)
+		crate::is_collapsed(self)
 	}
 
 	// endregion: --- Collapse
