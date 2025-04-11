@@ -116,7 +116,6 @@ pub fn try_into_collapsed(path: impl Into<Utf8PathBuf>) -> Option<Utf8PathBuf> {
 
 	let mut components = Vec::new();
 	let mut normal_seen = false;
-	let mut is_relative = true;
 	let mut parent_count = 0;
 
 	// Process each component
