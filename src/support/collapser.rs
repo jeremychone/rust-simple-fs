@@ -115,7 +115,10 @@ mod tests {
 		for (path, expected) in data {
 			// assert!(is_collapsed(path), "Should be collapsed '{path}'");
 			let res_path = collapse(path);
-			assert_eq!(res_path.as_str(), *expected, "Wrong normalization for path '{path}'");
+			let expected = Utf8PathBuf::from(expected);
+			println!("->> expected {expected}");
+			// NOTE: exepcted is now utf8pathbuf, with / all the time, but when doing Eq, it will compare on components
+			assert_eq!(res_path.as_str(), expected, "Wrong normalization for path '{path}'");
 		}
 
 		Ok(())
