@@ -62,7 +62,7 @@ pub fn get_depth(patterns: &[&str], depth: Option<usize>) -> usize {
 	}
 	let mut max_depth = 0;
 	for &g in patterns {
-		let depth_count = g.matches(|c| c == '\\' || c == '/').count() + 1;
+		let depth_count = g.matches(['\\', '/']).count() + 1;
 		if depth_count > max_depth {
 			max_depth = depth_count;
 		}

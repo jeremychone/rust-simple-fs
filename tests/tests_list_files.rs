@@ -1,4 +1,4 @@
-use simple_fs::{iter_files, list_files, ListOptions, SFile, SPath};
+use simple_fs::{ListOptions, SFile, SPath, iter_files, list_files};
 
 pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -160,7 +160,7 @@ fn test_list_files_absolute_wildcard() -> Result<()> {
 fn test_list_files_absolute_direct() -> Result<()> {
 	// Get the absolute path to "tests-data/file1.md".
 	let file_abs = std::fs::canonicalize("tests-data/file1.md")?;
-	let file_abs = SPath::from_std_path_buf(file_abs)?.into_normalized();
+	let file_abs = SPath::from_std_path_buf(file_abs)?;
 
 	// Get the parent directory of the file.
 	let parent_dir = file_abs.parent().ok_or("Should have parent dir")?;
@@ -174,7 +174,8 @@ fn test_list_files_absolute_direct() -> Result<()> {
 
 	let returned_path = files[0].as_str();
 	assert_eq!(
-		returned_path, file_abs.as_str(),
+		returned_path,
+		file_abs.as_str(),
 		"The file path should match the absolute file path"
 	);
 
@@ -185,7 +186,7 @@ fn test_list_files_absolute_direct() -> Result<()> {
 fn test_list_files_mixed_absolute_and_relative_globs() -> Result<()> {
 	// -- Exec
 	// Mix an absolute glob and a relative glob in the same call.
-	let abs_pattern = SPath::new("./tests-data/file1.md").canonicalize()?.into_normalized();
+	let abs_pattern = SPath::new("./tests-data/file1.md").canonicalize()?;
 	let patterns = [abs_pattern.as_str(), "tests-data/file2.txt"];
 	let res = list_files("./", Some(&patterns), None)?;
 

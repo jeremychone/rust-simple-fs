@@ -4,13 +4,42 @@
 
 use camino::{Utf8Path, Utf8PathBuf};
 
+/// Checks if a path needs normalization.
+/// - If it contains a `\`
+/// - If it has two or more consecutive `//`
+/// - If it contains one or more `/./`
+///
+/// Note: This performs a single pass and returns as early as possible.
 pub fn needs_normalize(path: &Utf8Path) -> bool {
-	// Check if the path contains any backslashes, multiple consecutive slashes,
-	// single dots (except at the start), or the Windows-specific `\\?\` prefix.
 	let path_str = path.as_str();
-	path_str.contains('\\') || path_str.contains("//") || path_str.contains("/.") || path_str.starts_with(r"\\?\")
-}
+	let mut chars = path_str.chars().peekable();
 
+	// Check for \\?\ prefix
+	if path_str.starts_with(r"\\?\") {
+		return true;
+	}
+
+	while let Some(c) = chars.next() {
+		match c {
+			'\\' => return true,
+			'/' => match chars.peek() {
+				Some('/') => return true,
+				Some('.') => {
+					let mut lookahead = chars.clone();
+					lookahead.next(); // consume '.'
+					match lookahead.peek() {
+						Some('/') | None => return true,
+						_ => {}
+					}
+				}
+				_ => {}
+			},
+			_ => {}
+		}
+	}
+
+	false
+}
 /// Normalizes a path by:
 /// - Converting backslashes to forward slashes
 /// - Collapsing multiple consecutive slashes to single slashes

@@ -9,9 +9,9 @@ mod globs_file_iter;
 mod iter_dirs;
 mod iter_files;
 mod list_options;
+mod reshape;
 mod sfile;
 mod spath;
-mod support;
 mod watch;
 
 #[cfg(feature = "bin-nums")]
@@ -31,6 +31,7 @@ pub use glob::*;
 pub use iter_dirs::*;
 pub use iter_files::*;
 pub use list_options::*;
+pub use reshape::*;
 pub use sfile::*;
 pub use spath::*;
 pub use watch::*;

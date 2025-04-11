@@ -139,7 +139,7 @@ impl GlobsDirIter {
 			.into_iter()
 			.filter_map(|entry_result| entry_result.ok())
 			.filter(|entry| entry.file_type().is_dir())
-			.filter_map(|entry| SPath::from_std_path_ok(entry.path()).map(SPath::into_normalized))
+			.filter_map(|entry| SPath::from_std_path_ok(entry.path()))
 			.filter(move |path| {
 				// Skip paths that match exclude patterns
 				if let Some(ref exclude_set) = exclude_globset {

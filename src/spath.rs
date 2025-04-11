@@ -1,4 +1,4 @@
-use crate::{Error, Result, support};
+use crate::{Error, Result, reshape};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use pathdiff::diff_utf8_paths;
@@ -6,8 +6,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// An SPath can be constructed from a String, Path, io::DirEntry, or walkdir::DirEntry
-/// and guarantees the path is UTF-8, simplifying many apis.
+/// An SPath is a posix normalized Path using camino Utf8PathBuf as strogate.
+/// It can be constructed from a String, Path, io::DirEntry, or walkdir::DirEntry
+///
+/// - It's Posix normalized `/`, all redundant `//` and `/./` are removed
+/// - Garanteed to be UTF8
 #[derive(Debug, Clone)]
 pub struct SPath {
 	pub(crate) path_buf: Utf8PathBuf,
@@ -16,28 +19,31 @@ pub struct SPath {
 /// Constructors that guarantee the SPath contract described in the struct
 impl SPath {
 	/// Constructor for SPath accepting anything that implements Into<Utf8PathBuf>.
+	/// IMPORTANT: This will normalize the path (posix style
 	pub fn new(path: impl Into<Utf8PathBuf>) -> Self {
-		Self { path_buf: path.into() }
+		let path_buf = path.into();
+		let path_buf = reshape::into_normalized(path_buf);
+		Self { path_buf }
 	}
 
 	/// Constructor from standard PathBuf.
 	pub fn from_std_path_buf(path_buf: PathBuf) -> Result<Self> {
 		let path_buf = validate_spath_for_result(path_buf)?;
-		Ok(SPath::from(path_buf))
+		Ok(SPath::new(path_buf))
 	}
 
 	/// Constructor from standard Path and all impl AsRef<Path>.
 	pub fn from_std_path(path: impl AsRef<Path>) -> Result<Self> {
 		let path = path.as_ref();
 		let path_buf = validate_spath_for_result(path)?;
-		Ok(SPath::from(path_buf))
+		Ok(SPath::new(path_buf))
 	}
 
 	/// Constructor from walkdir::DirEntry
 	pub fn from_walkdir_entry(wd_entry: walkdir::DirEntry) -> Result<Self> {
 		let path = wd_entry.into_path();
 		let path_buf = validate_spath_for_result(path)?;
-		Ok(SPath::from(path_buf))
+		Ok(SPath::new(path_buf))
 	}
 
 	/// Constructor for anything that implements AsRef<Path>.
@@ -46,14 +52,14 @@ impl SPath {
 	pub fn from_std_path_ok(path: impl AsRef<Path>) -> Option<Self> {
 		let path = path.as_ref();
 		let path_buf = validate_spath_for_option(path)?;
-		Some(SPath::from(path_buf))
+		Some(SPath::new(path_buf))
 	}
 
 	/// Constructed from PathBuf returns an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_std_path_buf_ok(path_buf: PathBuf) -> Option<Self> {
 		let path_buf = validate_spath_for_option(&path_buf)?;
-		Some(SPath::from(path_buf))
+		Some(SPath::new(path_buf))
 	}
 
 	/// Constructor from fs::DirEntry returning an Option, none if validation fails.
@@ -61,14 +67,14 @@ impl SPath {
 	pub fn from_fs_entry_ok(fs_entry: fs::DirEntry) -> Option<Self> {
 		let path_buf = fs_entry.path();
 		let path_buf = validate_spath_for_option(&path_buf)?;
-		Some(SPath::from(path_buf))
+		Some(SPath::new(path_buf))
 	}
 
 	/// Constructor from walkdir::DirEntry returning an Option, none if validation fails.
 	/// Useful for filter_map.
 	pub fn from_walkdir_entry_ok(wd_entry: walkdir::DirEntry) -> Option<Self> {
 		let path_buf = validate_spath_for_option(wd_entry.path())?;
-		Some(SPath::from(path_buf))
+		Some(SPath::new(path_buf))
 	}
 }
 
@@ -212,37 +218,6 @@ impl SPath {
 		Ok(SPath::new(path))
 	}
 
-	// region:    --- Normalize
-
-	/// Posix Normalize this SPath (if needed)
-	/// See `into_normalized` for details.
-	///
-	/// TODO: We could optimize this a little further by avoiding the original clone (just do the new alloc)
-	pub fn normalize(&self) -> Self {
-		let path_buf = support::into_normalized(self.path_buf.clone());
-		SPath { path_buf }
-	}
-
-	/// Posix Normalize this SPath (if needed)
-	///
-	/// - All with `/` regardless of OS (works on windows with Rust)
-	/// - Remove redundant `/` or `\`
-	/// - Remve middle `/./`
-	///
-	/// IMPORTANT: Do not collapse path, meaning leave the `/../` as is.
-	///
-	pub fn into_normalized(self) -> SPath {
-		if support::needs_normalize(self.path()) {
-			SPath {
-				path_buf: support::into_normalized(self.path_buf),
-			}
-		} else {
-			self
-		}
-	}
-
-	// endregion: --- Normalize
-
 	// region:    --- Collapse
 
 	/// Collapse a path without performing I/O.
@@ -251,7 +226,7 @@ impl SPath {
 	///
 	/// However, this does not resolve links.
 	pub fn collapse(&self) -> SPath {
-		support::collapse(self)
+		reshape::collapse(self)
 	}
 
 	/// Same as [`collapse`] but consume and create a new SPath only if needed
@@ -263,7 +238,7 @@ impl SPath {
 	/// `Component::Prefix`/`Component::RootDir` is encountered,
 	/// or if the path points outside of current dir, returns `None`.
 	pub fn try_collapse(&self) -> Option<SPath> {
-		support::try_collapse(self)
+		reshape::try_collapse(self)
 	}
 
 	/// Return `true` if the path is collapsed.
@@ -273,7 +248,7 @@ impl SPath {
 	/// If the path does not start with `./` but contains `./` in the middle,
 	/// then this function might returns `true`.
 	pub fn is_collapsed(&self) -> bool {
-		support::is_collapsed(self)
+		reshape::is_collapsed(self)
 	}
 
 	// endregion: --- Collapse
@@ -416,37 +391,31 @@ impl From<SPath> for Utf8PathBuf {
 
 impl From<Utf8PathBuf> for SPath {
 	fn from(path_buf: Utf8PathBuf) -> Self {
-		SPath { path_buf }
+		SPath::new(path_buf)
 	}
 }
 
 impl From<&Utf8Path> for SPath {
 	fn from(path: &Utf8Path) -> Self {
-		SPath { path_buf: path.into() }
+		SPath::new(path)
 	}
 }
 
 impl From<String> for SPath {
 	fn from(path: String) -> Self {
-		Self {
-			path_buf: Utf8PathBuf::from(path),
-		}
+		SPath::new(path)
 	}
 }
 
 impl From<&String> for SPath {
 	fn from(path: &String) -> Self {
-		Self {
-			path_buf: Utf8PathBuf::from(path),
-		}
+		SPath::new(path)
 	}
 }
 
 impl From<&str> for SPath {
 	fn from(path: &str) -> Self {
-		Self {
-			path_buf: Utf8PathBuf::from(path),
-		}
+		SPath::new(path)
 	}
 }
 
