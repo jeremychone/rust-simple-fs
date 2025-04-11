@@ -310,7 +310,7 @@ fn is_prefix(prefix: &SPath, path: &SPath) -> bool {
 		return false;
 	}
 	let remainder = &path_str[prefix_str.len()..];
-	remainder.starts_with(std::path::MAIN_SEPARATOR)
+	remainder.starts_with("/")
 }
 
 /// Helper function to safely compute the diff, returning an empty string on error.
@@ -323,5 +323,5 @@ fn safe_diff(path: &SPath, base: &SPath) -> String {
 fn relative_from_absolute(glob: &SPath, group_base: &SPath) -> String {
 	let base_str = group_base.as_str();
 	let rel = glob.as_str().strip_prefix(base_str).unwrap_or(glob.as_str());
-	rel.trim_start_matches(std::path::MAIN_SEPARATOR).to_string()
+	rel.trim_start_matches("/").to_string()
 }
