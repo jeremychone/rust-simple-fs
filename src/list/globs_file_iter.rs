@@ -1,4 +1,4 @@
-use crate::glob::{DEFAULT_EXCLUDE_GLOBS, get_glob_set, longest_base_path_wild_free};
+use super::glob::{DEFAULT_EXCLUDE_GLOBS, get_glob_set, longest_base_path_wild_free};
 use crate::{ListOptions, Result, SFile, SPath, get_depth};
 use std::collections::HashSet;
 use std::path::Path;
@@ -228,7 +228,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 		} else {
 			// Remove any leading "./" from the glob
 			let cleaned = glob.trim_start_matches("./").to_string();
-			// Collpase the relative glob by stripping the main_base prefix if present.
+			// Collapse the relative glob by stripping the main_base prefix if present.
 			let base_candidate: &str = main_base.as_str();
 			let base_str_cleaned = {
 				let s = base_candidate.trim_start_matches("./");

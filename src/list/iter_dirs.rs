@@ -9,7 +9,7 @@ pub fn iter_dirs(
 	include_globs: Option<&[&str]>,
 	list_options: Option<ListOptions<'_>>,
 ) -> Result<impl Iterator<Item = SPath>> {
-	let iter = crate::globs_dir_iter::GlobsDirIter::new(dir, include_globs, list_options)?;
+	let iter = super::globs_dir_iter::GlobsDirIter::new(dir, include_globs, list_options)?;
 	Ok(iter)
 }
 

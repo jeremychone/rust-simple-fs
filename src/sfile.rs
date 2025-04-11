@@ -204,7 +204,7 @@ impl SFile {
 
 	// region:    --- Collapse
 
-	/// Collpase a path without performing I/O.
+	/// Collapse a path without performing I/O.
 	///
 	/// All redundant separator and up-level references are collapsed.
 	///

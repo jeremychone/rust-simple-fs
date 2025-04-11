@@ -1,11 +1,11 @@
-//! Collpase Camino Utf8Path paths similarly to canonicalize, but without performing I/O.
+//! Collapse Camino Utf8Path paths similarly to canonicalize, but without performing I/O.
 //!
 //! Adapted from [cargo-binstall](https://github.com/cargo-bins/cargo-binstall/blob/main/crates/normalize-path/src/lib.rs)
 
 use crate::SPath;
 use camino::{Utf8Component, Utf8Path, Utf8PathBuf};
 
-/// Collpase a path without performing I/O.
+/// Collapse a path without performing I/O.
 ///
 /// - Resolved the "../"
 /// - And the "./"
@@ -100,7 +100,7 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_collapser_collpase_ok() -> Result<()> {
+	fn test_collapser_collapse_ok() -> Result<()> {
 		// -- Setup & Fixtures
 		let data = &[
 			//
@@ -125,7 +125,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_collapser_is_collpased_true() -> Result<()> {
+	fn test_collapser_is_collapsed_true() -> Result<()> {
 		// -- Setup & Fixtures
 		let data = &[
 			//
@@ -145,7 +145,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_collapser_is_collpased_false() -> Result<()> {
+	fn test_collapser_is_collapsed_false() -> Result<()> {
 		// -- Setup & Fixtures
 		let data = &[
 			//
