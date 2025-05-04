@@ -309,6 +309,32 @@ impl SPath {
 	// endregion: --- Diff
 }
 
+/// Extensions
+impl SPath {
+	/// Makes sure this Path end with the given extension
+	///
+	/// - Returns self if the extension is already set,
+	/// - otherwise swap or sets the extension.
+	///
+	/// ## Params
+	/// - `ext` e.g. `html` (not . prefixed)
+	pub fn ensure_extension(&self, ext: &str) -> Self {
+		let mut path_buf = self.path_buf.clone();
+		if self.extension() != Some(ext) {
+			path_buf.set_extension(ext);
+		}
+		path_buf.into()
+	}
+
+	/// Appends the extension, even if one already exists or is the same.
+	///
+	/// ## Params
+	/// - `ext` e.g. `html` (not . prefixed)
+	pub fn append_extension(&self, ext: &str) -> Self {
+		SPath::new(format!("{}.{ext}", self))
+	}
+}
+
 // region:    --- Std Traits Impls
 
 impl fmt::Display for SPath {
