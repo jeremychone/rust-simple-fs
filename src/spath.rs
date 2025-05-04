@@ -311,19 +311,29 @@ impl SPath {
 
 /// Extensions
 impl SPath {
-	/// Makes sure this Path end with the given extension
+	/// Consumes the SPath and returns one with the given extension ensured:
+	/// - Sets the extension if not already equal.
+	/// - Returns self if the extension is already present.
 	///
+	/// ## Params
+	/// - `ext` e.g. `html` (not . prefixed)
+	pub fn into_ensure_extension(mut self, ext: &str) -> Self {
+		if self.extension() != Some(ext) {
+			self.path_buf.set_extension(ext);
+		}
+		self
+	}
+
+	/// Returns a new SPath with the given extension ensured:
 	/// - Returns self if the extension is already set,
-	/// - otherwise swap or sets the extension.
+	/// - Otherwise sets it.
+	///
+	/// Delegates to `into_ensure_extension`.
 	///
 	/// ## Params
 	/// - `ext` e.g. `html` (not . prefixed)
 	pub fn ensure_extension(&self, ext: &str) -> Self {
-		let mut path_buf = self.path_buf.clone();
-		if self.extension() != Some(ext) {
-			path_buf.set_extension(ext);
-		}
-		path_buf.into()
+		self.clone().into_ensure_extension(ext)
 	}
 
 	/// Appends the extension, even if one already exists or is the same.
@@ -332,6 +342,38 @@ impl SPath {
 	/// - `ext` e.g. `html` (not . prefixed)
 	pub fn append_extension(&self, ext: &str) -> Self {
 		SPath::new(format!("{}.{ext}", self))
+	}
+}
+
+/// Other
+impl SPath {
+	/// Consumes the SPath and returns a new one for the directory before the first glob expression.
+	///
+	/// Does not create a new one if no glob found.
+	///
+	/// ## Examples
+	/// - `/some/path/**/src/*.rs` → `/some/path`
+	/// - `**/src/*.rs` → `""`
+	/// - `/some/{src,doc}/**/*` → `/some`
+	pub fn into_dir_before_glob(self) -> SPath {
+		let path_str = self.as_str();
+		let mut last_slash_idx = None;
+
+		for (i, c) in path_str.char_indices() {
+			if c == '/' {
+				last_slash_idx = Some(i);
+			} else if matches!(c, '*' | '?' | '[' | '{') {
+				return SPath::from(&path_str[..last_slash_idx.unwrap_or(0)]);
+			}
+		}
+
+		self
+	}
+
+	/// Returns a cloned SPath with the directory path before the first glob expression.
+	/// Delegates to `into_dir_before_glob`.
+	pub fn dir_before_glob(&self) -> SPath {
+		self.clone().into_dir_before_glob()
 	}
 }
 
