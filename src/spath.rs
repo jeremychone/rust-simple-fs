@@ -254,6 +254,16 @@ impl SPath {
 		self.path_buf.parent().map(SPath::from)
 	}
 
+	/// Returns a new SPath with the given suffix appended to the filename (after the eventual extension)
+	///
+	/// Use [`join`] to join path segments.
+	///
+	/// Example:
+	/// - `foo.rs` + `_backup` → `foo.rs_backup`
+	pub fn append_suffix(&self, suffix: &str) -> SPath {
+		SPath::new(format!("{self}{suffix}"))
+	}
+
 	/// Joins the provided path with the current path and returns an SPath.
 	pub fn join(&self, leaf_path: impl Into<Utf8PathBuf>) -> SPath {
 		let path_buf = self.path_buf.join(leaf_path.into());
