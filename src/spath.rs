@@ -357,15 +357,15 @@ impl SPath {
 
 /// Other
 impl SPath {
-	/// Consumes the SPath and returns a new one for the directory before the first glob expression.
+	/// Returns a new SPath for the eventual directory before the first glob expression.
 	///
-	/// Does not create a new one if no glob found.
+	/// If not a glob, will return none
 	///
 	/// ## Examples
 	/// - `/some/path/**/src/*.rs` → `/some/path`
 	/// - `**/src/*.rs` → `""`
 	/// - `/some/{src,doc}/**/*` → `/some`
-	pub fn into_dir_before_glob(self) -> SPath {
+	pub fn dir_before_glob(&self) -> Option<SPath> {
 		let path_str = self.as_str();
 		let mut last_slash_idx = None;
 
@@ -373,17 +373,11 @@ impl SPath {
 			if c == '/' {
 				last_slash_idx = Some(i);
 			} else if matches!(c, '*' | '?' | '[' | '{') {
-				return SPath::from(&path_str[..last_slash_idx.unwrap_or(0)]);
+				return Some(SPath::from(&path_str[..last_slash_idx.unwrap_or(0)]));
 			}
 		}
 
-		self
-	}
-
-	/// Returns a cloned SPath with the directory path before the first glob expression.
-	/// Delegates to `into_dir_before_glob`.
-	pub fn dir_before_glob(&self) -> SPath {
-		self.clone().into_dir_before_glob()
+		None
 	}
 }
 
