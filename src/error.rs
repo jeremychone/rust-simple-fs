@@ -6,70 +6,80 @@ use std::time::SystemTimeError;
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, Display)]
-#[display("{self:?}")]
 pub enum Error {
 	// -- Path
+	#[display("Path is not valid UTF-8: '{_0}'")]
 	PathNotUtf8(String),
+	#[display("Path has no file name: '{_0}'")]
 	PathHasNoFileName(String),
 
 	// -- File
+	#[display("File not found at path: '{_0}'")]
 	FileNotFound(String),
+	#[display("Cannot open file '{}'\nCause: {}", _0.path, _0.cause)]
 	FileCantOpen(PathAndCause),
+	#[display("Cannot read path '{}'\nCause: {}", _0.path, _0.cause)]
 	FileCantRead(PathAndCause),
+	#[display("Cannot write file '{}'\nCause: {}", _0.path, _0.cause)]
 	FileCantWrite(PathAndCause),
+	#[display("Cannot create file '{}'\nCause: {}", _0.path, _0.cause)]
 	FileCantCreate(PathAndCause),
+	#[display("File path has no parent directory: '{_0}'")]
 	FileHasNoParent(String),
 
 	// -- Metadata
+	#[display("Cannot get metadata for path '{}'\nCause: {}", _0.path, _0.cause)]
 	CantGetMetadata(PathAndCause),
+	#[display("Cannot get 'modified' metadata for path '{}'\nCause: {}", _0.path, _0.cause)]
 	CantGetMetadataModified(PathAndCause),
 
 	// -- Time
+	#[display("Cannot get duration from system time. Cause: {_0}")]
 	CantGetDurationSystemTimeError(SystemTimeError),
 
 	// -- Directory
+	#[display("Cannot create directory (and parents) '{}'\nCause: {}", _0.path, _0.cause)]
 	DirCantCreateAll(PathAndCause),
 
 	// -- Path Validations
+	#[display("Path is invalid: '{}'\nCause: {}",_0.path, _0.cause)]
 	PathNotValidForPath(PathAndCause),
 
 	// -- Glob
-	GlobCantNew {
-		glob: String,
-		cause: globset::Error,
-	},
-	GlobSetCantBuild {
-		globs: Vec<String>,
-		cause: globset::Error,
-	},
+	#[display("Cannot create glob pattern '{glob}'.\nCause: {cause}")]
+	GlobCantNew { glob: String, cause: globset::Error },
+	#[display("Cannot build glob set from '{globs:?}'.\nCause: {cause}")]
+	GlobSetCantBuild { globs: Vec<String>, cause: globset::Error },
 
 	// -- Watch
-	FailToWatch {
-		path: String,
-		cause: String,
-	},
+	#[display("Failed to watch path '{path}'.\nCause: {cause}")]
+	FailToWatch { path: String, cause: String },
+	#[display("Cannot watch path because it was not found: '{_0}'")]
 	CantWatchPathNotFound(String),
 
 	// -- Other
-	CannotDiff {
-		path: String,
-		base: String,
-	},
+	#[display("Cannot compute relative path from '{base}' to '{path}'")]
+	CannotDiff { path: String, base: String },
 	#[display("Cannot Canonicalize path '{}'\nCause: {}", _0.path, _0.cause)]
 	CannotCanonicalize(PathAndCause),
 
 	// -- with-json
 	#[cfg(feature = "with-json")]
+	#[display("Cannot read json path '{}'\nCause: {}", _0.path, _0.cause)]
 	JsonCantRead(PathAndCause),
 	#[cfg(feature = "with-json")]
+	#[display("Cannot write JSON to path '{}'\nCause: {}", _0.path, _0.cause)]
 	JsonCantWrite(PathAndCause),
 	#[cfg(feature = "with-json")]
+	#[display("Error processing NDJSON: {_0}")]
 	NdJson(String),
 
 	// -- with-toml
 	#[cfg(feature = "with-toml")]
+	#[display("Cannot read TOML from path '{}'\nCause: {}", _0.path, _0.cause)]
 	TomlCantRead(PathAndCause),
 	#[cfg(feature = "with-toml")]
+	#[display("Cannot write TOML to path '{}'\nCause: {}", _0.path, _0.cause)]
 	TomlCantWrite(PathAndCause),
 }
 
