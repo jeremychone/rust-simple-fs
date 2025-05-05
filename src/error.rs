@@ -1,10 +1,12 @@
+use derive_more::Display;
 use std::io;
 use std::path::Path;
 use std::time::SystemTimeError;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
+#[display("{self:?}")]
 pub enum Error {
 	// -- Path
 	PathNotUtf8(String),
@@ -53,6 +55,7 @@ pub enum Error {
 		path: String,
 		base: String,
 	},
+	#[display("Cannot Canonicalize path '{}'\nCause: {}", _0.path, _0.cause)]
 	CannotCanonicalize(PathAndCause),
 
 	// -- with-json
@@ -60,6 +63,8 @@ pub enum Error {
 	JsonCantRead(PathAndCause),
 	#[cfg(feature = "with-json")]
 	JsonCantWrite(PathAndCause),
+	#[cfg(feature = "with-json")]
+	NdJson(String),
 
 	// -- with-toml
 	#[cfg(feature = "with-toml")]
@@ -70,21 +75,21 @@ pub enum Error {
 
 // region:    --- Cause Types
 
-#[derive(Debug)]
+#[derive(Debug, Display)]
 pub enum Cause {
-	#[allow(unused)]
 	Io(Box<io::Error>),
 
 	#[cfg(feature = "with-json")]
 	SerdeJson(Box<serde_json::Error>),
+
 	#[cfg(feature = "with-toml")]
 	TomlDe(Box<toml::de::Error>),
+
 	#[cfg(feature = "with-toml")]
 	TomlSer(Box<toml::ser::Error>),
 }
 
 #[derive(Debug)]
-#[allow(unused)]
 pub struct PathAndCause {
 	path: String,
 	cause: Cause,
@@ -144,12 +149,6 @@ impl From<(&Path, toml::ser::Error)> for PathAndCause {
 // endregion: --- TOML
 
 // region:    --- Error Boilerplate
-
-impl core::fmt::Display for Error {
-	fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-		write!(fmt, "{self:?}")
-	}
-}
 
 impl std::error::Error for Error {}
 
