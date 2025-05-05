@@ -1,8 +1,8 @@
-use crate::SPath;
 use crate::{Error, Result};
+use crate::{SMeta, SPath};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
-use std::fs;
+use std::fs::{self, Metadata};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -156,32 +156,6 @@ impl SFile {
 		self.path.ext()
 	}
 
-	/// Returns the path.metadata modified as SystemTime.
-	pub fn modified(&self) -> Result<SystemTime> {
-		self.path.modified()
-	}
-
-	/// Returns the epoch duration in microseconds.
-	/// Note: The maximum UTC date would be approximately `2262-04-11`.
-	///       Thus, for all intents and purposes, it is far enough not to worry.
-	pub fn modified_us(&self) -> Result<i64> {
-		self.path.modified_us()
-	}
-
-	/// Returns the file size in bytes as `i64`.
-	/// Note: In the highly unlikely event that the size exceeds `i64::MAX`,
-	///       `i64::MAX` is returned. `i64::MAX` represents 8,388,607 terabytes,
-	///       providing ample margin before it becomes a concern.
-	pub fn file_size(&self) -> Result<i64> {
-		let path = self.std_path();
-		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
-		let size = match metadata.len().try_into() {
-			Ok(v) => v,
-			Err(_) => i64::MAX,
-		};
-		Ok(size)
-	}
-
 	/// Returns true if the internal path is absolute.
 	pub fn is_absolute(&self) -> bool {
 		self.path.is_absolute()
@@ -190,6 +164,52 @@ impl SFile {
 	/// Returns true if the internal path is relative.
 	pub fn is_relative(&self) -> bool {
 		self.path.is_relative()
+	}
+}
+
+/// Meta
+impl SFile {
+	/// Get a Simple Metadata structure `SMeta` with
+	/// created_epoch_us, modified_epoch_us, and size (all i64)
+	/// (size will be '0' for any none file)
+	pub fn meta(&self) -> Result<SMeta> {
+		self.path.meta()
+	}
+
+	/// Returns the std metadata
+	pub fn metadata(&self) -> Result<Metadata> {
+		self.path.metadata()
+	}
+
+	/// Returns the path.metadata modified as SystemTime.
+	///
+	#[allow(deprecated)]
+	#[deprecated = "use spath.meta() or spath.metadata"]
+	pub fn modified(&self) -> Result<SystemTime> {
+		self.path.modified()
+	}
+
+	/// Returns the epoch duration in microseconds.
+	/// Note: The maximum UTC date would be approximately `2262-04-11`.
+	///       Thus, for all intents and purposes, it is far enough not to worry.
+	#[deprecated = "use spath.meta()"]
+	pub fn modified_us(&self) -> Result<i64> {
+		Ok(self.meta()?.modified_epoch_us)
+	}
+
+	/// Returns the file size in bytes as `i64`.
+	/// Note: In the highly unlikely event that the size exceeds `i64::MAX`,
+	///       `i64::MAX` is returned. `i64::MAX` represents 8,388,607 terabytes,
+	///       providing ample margin before it becomes a concern.
+	#[deprecated = "use spath.meta()"]
+	pub fn file_size(&self) -> Result<i64> {
+		let path = self.std_path();
+		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
+		let size = match metadata.len().try_into() {
+			Ok(v) => v,
+			Err(_) => i64::MAX,
+		};
+		Ok(size)
 	}
 }
 

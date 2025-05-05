@@ -1,5 +1,6 @@
 // region:    --- Modules
 
+mod common;
 mod dir;
 mod error;
 mod featured;
@@ -14,6 +15,7 @@ pub use self::error::{Error, Result};
 
 // -- Re-export everything for the root crate
 
+pub use common::*;
 pub use dir::*;
 #[allow(unused)]
 pub use featured::*;

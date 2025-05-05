@@ -1,4 +1,5 @@
-use derive_more::Display;
+use crate::SPath;
+use derive_more::{Display, From};
 use std::io;
 use std::path::Path;
 use std::time::SystemTimeError;
@@ -85,8 +86,12 @@ pub enum Error {
 
 // region:    --- Cause Types
 
-#[derive(Debug, Display)]
+#[derive(Debug, Display, From)]
 pub enum Cause {
+	#[from]
+	Custom(String),
+
+	#[from]
 	Io(Box<io::Error>),
 
 	#[cfg(feature = "with-json")]
@@ -114,6 +119,25 @@ impl From<(&Path, io::Error)> for PathAndCause {
 		PathAndCause {
 			path: val.0.to_string_lossy().to_string(),
 			cause: Cause::Io(Box::new(val.1)),
+		}
+	}
+}
+
+impl From<(&SPath, io::Error)> for PathAndCause {
+	fn from(val: (&SPath, io::Error)) -> Self {
+		PathAndCause {
+			path: val.0.to_string(),
+			cause: Cause::Io(Box::new(val.1)),
+		}
+	}
+}
+
+//std::time::SystemTimeError
+impl From<(&SPath, std::time::SystemTimeError)> for PathAndCause {
+	fn from(val: (&SPath, std::time::SystemTimeError)) -> Self {
+		PathAndCause {
+			path: val.0.to_string(),
+			cause: Cause::Custom(val.1.to_string()),
 		}
 	}
 }

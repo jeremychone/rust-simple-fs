@@ -1,8 +1,8 @@
-use crate::{Error, Result, reshape};
+use crate::{Error, Result, SMeta, reshape};
 use camino::{Utf8Path, Utf8PathBuf};
 use core::fmt;
 use pathdiff::diff_utf8_paths;
-use std::fs;
+use std::fs::{self, Metadata};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -172,7 +172,64 @@ impl SPath {
 		self.path_buf.exists()
 	}
 
-	/// Returns the path.metadata modified.
+	/// Returns true if the internal path is absolute.
+	pub fn is_absolute(&self) -> bool {
+		self.path_buf.is_absolute()
+	}
+
+	/// Returns true if the internal path is relative.
+	pub fn is_relative(&self) -> bool {
+		self.path_buf.is_relative()
+	}
+}
+
+/// Meta
+impl SPath {
+	/// Get a Simple Metadata structure `SMeta` with
+	/// created_epoch_us, modified_epoch_us, and size (all i64)
+	/// (size will be '0' for any none file)
+	#[allow(clippy::fn_to_numeric_cast)]
+	pub fn meta(&self) -> Result<SMeta> {
+		let path = self;
+
+		let metadata = self.metadata()?;
+
+		// -- Get modified (failed if it cannot)
+		let modified = metadata.modified().map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
+		let modified_epoch_us: i64 = modified
+			.duration_since(UNIX_EPOCH)
+			.map_err(|ex| Error::CantGetMetadata((path, ex).into()))?
+			.as_micros()
+			.min(i64::max as u128) as i64;
+
+		// -- Get created (If not found, will get modified)
+		let created_epoch_us = metadata
+			.modified()
+			.ok()
+			.and_then(|c| c.duration_since(UNIX_EPOCH).ok())
+			.map(|c| c.as_micros().min(i64::max as u128) as i64);
+		let created_epoch_us = created_epoch_us.unwrap_or(modified_epoch_us);
+
+		// -- Get size
+		let size = if metadata.is_file() { metadata.len() as i64 } else { 0 };
+
+		Ok(SMeta {
+			created_epoch_us,
+			modified_epoch_us,
+			size,
+			is_file: metadata.is_file(),
+			is_dir: metadata.is_dir(),
+		})
+	}
+
+	/// Returns the std metadata
+	pub fn metadata(&self) -> Result<Metadata> {
+		fs::metadata(self).map_err(|ex| Error::CantGetMetadata((self, ex).into()))
+	}
+
+	/// Returns the path.metadata modified SystemTime
+	///
+	#[deprecated = "use spath.meta()"]
 	pub fn modified(&self) -> Result<SystemTime> {
 		let path = self.std_path();
 		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
@@ -185,25 +242,9 @@ impl SPath {
 	/// Returns the epoch duration in microseconds.
 	/// Note: The maximum UTC date would be approximately `2262-04-11`.
 	///       Thus, for all intents and purposes, it is far enough to not worry.
+	#[deprecated = "use spath.meta()"]
 	pub fn modified_us(&self) -> Result<i64> {
-		let modified = self.modified()?;
-		let since_the_epoch = modified
-			.duration_since(UNIX_EPOCH)
-			.map_err(Error::CantGetDurationSystemTimeError)?;
-
-		let modified_us = since_the_epoch.as_micros().min(i64::MAX as u128) as i64;
-
-		Ok(modified_us)
-	}
-
-	/// Returns true if the internal path is absolute.
-	pub fn is_absolute(&self) -> bool {
-		self.path_buf.is_absolute()
-	}
-
-	/// Returns true if the internal path is relative.
-	pub fn is_relative(&self) -> bool {
-		self.path_buf.is_relative()
+		Ok(self.meta()?.modified_epoch_us)
 	}
 }
 
