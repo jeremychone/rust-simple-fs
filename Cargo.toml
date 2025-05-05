@@ -20,7 +20,7 @@ unsafe_code = "forbid"
 # unused = { level = "allow", priority = -1 } # For exploratory dev.
 
 [features]
-"full" = ["with-json", "with-toml", "bin-nums"]
+"default" = ["with-json", "with-toml", "bin-nums"]
 "with-json" = ["serde", "serde_json"]
 "with-toml" = ["serde", "toml"]
 "bin-nums" = ["byteorder"]
