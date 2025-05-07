@@ -13,6 +13,8 @@ pub enum Error {
 	PathNotUtf8(String),
 	#[display("Path has no file name: '{_0}'")]
 	PathHasNoFileName(String),
+	#[display("Strip Prefix fail. Path '{path}' does not a base of '{prefix}'")]
+	StripPrefix { prefix: String, path: String },
 
 	// -- File
 	#[display("File not found at path: '{_0}'")]

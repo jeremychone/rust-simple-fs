@@ -360,6 +360,54 @@ impl SPath {
 	// endregion: --- Diff
 }
 
+/// Path/UTF8Path/Camino passthrough
+impl SPath {
+	pub fn as_std_path(&self) -> &Path {
+		self.std_path()
+	}
+
+	/// Returns a path that, when joined onto `base`, yields `self`.
+	///
+	/// # Errors
+	///
+	/// If `base` is not a prefix of `self`
+	pub fn strip_prefix(&self, prefix: impl AsRef<Path>) -> Result<SPath> {
+		let prefix = prefix.as_ref();
+		let new_path = self.path_buf.strip_prefix(prefix).map_err(|_| Error::StripPrefix {
+			prefix: prefix.to_string_lossy().to_string(),
+			path: self.to_string(),
+		})?;
+
+		Ok(new_path.into())
+	}
+
+	/// Determines whether `base` is a prefix of `self`.
+	///
+	/// Only considers whole path components to match.
+	///
+	/// # Examples
+	///
+	/// ```
+	/// use camino::Utf8Path;
+	///
+	/// let path = Utf8Path::new("/etc/passwd");
+	///
+	/// assert!(path.starts_with("/etc"));
+	/// assert!(path.starts_with("/etc/"));
+	/// assert!(path.starts_with("/etc/passwd"));
+	/// assert!(path.starts_with("/etc/passwd/")); // extra slash is okay
+	/// assert!(path.starts_with("/etc/passwd///")); // multiple extra slashes are okay
+	///
+	/// assert!(!path.starts_with("/e"));
+	/// assert!(!path.starts_with("/etc/passwd.txt"));
+	///
+	/// assert!(!Utf8Path::new("/etc/foo.rs").starts_with("/etc/foo"));
+	/// ```
+	pub fn starts_with(&self, base: impl AsRef<Path>) -> bool {
+		self.path_buf.starts_with(base)
+	}
+}
+
 /// Extensions
 impl SPath {
 	/// Consumes the SPath and returns one with the given extension ensured:

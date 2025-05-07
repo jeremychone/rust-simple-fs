@@ -299,6 +299,48 @@ impl SFile {
 	// endregion: --- Diff
 }
 
+/// Path/UTF8Path/Camino passthrough
+impl SFile {
+	pub fn as_std_path(&self) -> &Path {
+		self.path.std_path()
+	}
+
+	/// Returns a path that, when joined onto `base`, yields `self`.
+	///
+	/// # Errors
+	///
+	/// If `base` is not a prefix of `self`
+	pub fn strip_prefix(&self, prefix: impl AsRef<Path>) -> Result<SPath> {
+		self.path.strip_prefix(prefix)
+	}
+
+	/// Determines whether `base` is a prefix of `self`.
+	///
+	/// Only considers whole path components to match.
+	///
+	/// # Examples
+	///
+	/// ```
+	/// use camino::Utf8Path;
+	///
+	/// let path = Utf8Path::new("/etc/passwd");
+	///
+	/// assert!(path.starts_with("/etc"));
+	/// assert!(path.starts_with("/etc/"));
+	/// assert!(path.starts_with("/etc/passwd"));
+	/// assert!(path.starts_with("/etc/passwd/")); // extra slash is okay
+	/// assert!(path.starts_with("/etc/passwd///")); // multiple extra slashes are okay
+	///
+	/// assert!(!path.starts_with("/e"));
+	/// assert!(!path.starts_with("/etc/passwd.txt"));
+	///
+	/// assert!(!Utf8Path::new("/etc/foo.rs").starts_with("/etc/foo"));
+	/// ```
+	pub fn starts_with(&self, base: impl AsRef<Path>) -> bool {
+		self.path.starts_with(base)
+	}
+}
+
 // region:    --- Std Traits Impls
 
 impl AsRef<Path> for SFile {
