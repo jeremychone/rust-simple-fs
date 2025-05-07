@@ -375,9 +375,10 @@ impl SPath {
 		self
 	}
 
-	/// Returns a new SPath with the given extension ensured:
-	/// - Returns self if the extension is already set,
-	/// - Otherwise sets it.
+	/// Returns a new SPath with the given extension ensured.
+	///
+	/// - Since this takes a reference, it will return a Clone no matter what.
+	/// - Use [`into_ensure_extension`] to consume and create a new SPath only if needed.
 	///
 	/// Delegates to `into_ensure_extension`.
 	///
