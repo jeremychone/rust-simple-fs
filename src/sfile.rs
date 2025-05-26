@@ -297,6 +297,20 @@ impl SFile {
 	}
 
 	// endregion: --- Diff
+
+	// region:    --- Replace
+
+	pub fn replace_prefix(&self, base: impl AsRef<str>, with: impl AsRef<str>) -> SPath {
+		let path = &self.path;
+		path.replace_prefix(base, with)
+	}
+
+	pub fn into_replace_prefix(self, base: impl AsRef<str>, with: impl AsRef<str>) -> SPath {
+		let path = self.path;
+		path.into_replace_prefix(base, with)
+	}
+
+	// endregion: --- Replace
 }
 
 /// Path/UTF8Path/Camino passthrough

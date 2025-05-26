@@ -358,6 +358,43 @@ impl SPath {
 	}
 
 	// endregion: --- Diff
+
+	// region:    --- Replace
+
+	pub fn replace_prefix(&self, base: impl AsRef<str>, with: impl AsRef<str>) -> SPath {
+		let base = base.as_ref();
+		let with = with.as_ref();
+		let s = self.as_str();
+		if let Some(stripped) = s.strip_prefix(base) {
+			// Avoid introducing double slashes (is with.is_empty() because do not want to add a / if empty)
+			let joined = if with.is_empty() || with.ends_with('/') || stripped.starts_with('/') {
+				format!("{with}{stripped}")
+			} else {
+				format!("{with}/{stripped}")
+			};
+			SPath::new(joined)
+		} else {
+			self.clone()
+		}
+	}
+
+	pub fn into_replace_prefix(self, base: impl AsRef<str>, with: impl AsRef<str>) -> SPath {
+		let base = base.as_ref();
+		let with = with.as_ref();
+		let s = self.as_str();
+		if let Some(stripped) = s.strip_prefix(base) {
+			let joined = if with.is_empty() || with.ends_with('/') || stripped.starts_with('/') {
+				format!("{with}{stripped}")
+			} else {
+				format!("{with}/{stripped}")
+			};
+			SPath::new(joined)
+		} else {
+			self
+		}
+	}
+
+	// endregion: --- Replace
 }
 
 /// Path/UTF8Path/Camino passthrough
