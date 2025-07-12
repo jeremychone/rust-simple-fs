@@ -288,8 +288,7 @@ mod tests {
 			let expected_path = Utf8PathBuf::from(expected);
 			assert_eq!(
 				result_path, expected_path,
-				"Input: '{}', Expected: '{}', Got: '{}'",
-				input, expected, result_path
+				"Input: '{input}', Expected: '{expected}', Got: '{result_path}'"
 			);
 		}
 

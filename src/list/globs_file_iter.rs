@@ -267,7 +267,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 					let new_pat = if diff.is_empty() {
 						pat.to_string()
 					} else {
-						format!("{}/{}", diff, pat)
+						format!("{diff}/{pat}")
 					};
 					existing_patterns.push(new_pat);
 				}
@@ -281,7 +281,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 					let new_pat = if diff.is_empty() {
 						pat.clone()
 					} else {
-						format!("{}/{}", diff, pat)
+						format!("{diff}/{pat}")
 					};
 					new_patterns.push(new_pat);
 				}

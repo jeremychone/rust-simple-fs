@@ -142,7 +142,7 @@ fn test_list_files_absolute_wildcard() -> Result<()> {
 	let test_data_abs_str = test_data_abs.as_str();
 
 	// Construct a glob pattern that should match the "file1.md" file.
-	let pattern = format!("{}/{}", test_data_abs_str, "**/*1.md");
+	let pattern = format!("{test_data_abs_str}/**/*1.md");
 
 	// -- Exec
 	// Execute list_files using the tests-data directory and the wildcard pattern.

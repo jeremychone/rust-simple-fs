@@ -478,7 +478,7 @@ impl SPath {
 	/// ## Params
 	/// - `ext` e.g. `html` (not . prefixed)
 	pub fn append_extension(&self, ext: &str) -> Self {
-		SPath::new(format!("{}.{ext}", self))
+		SPath::new(format!("{self}.{ext}"))
 	}
 }
 

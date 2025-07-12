@@ -147,8 +147,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Failed to normalize backslashes in '{}'",
-				input
+				"Failed to normalize backslashes in '{input}'"
 			);
 		}
 
@@ -171,8 +170,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Failed to collapse multiple slashes in '{}'",
-				input
+				"Failed to collapse multiple slashes in '{input}'"
 			);
 		}
 
@@ -195,8 +193,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Failed to handle single dots correctly in '{}'",
-				input
+				"Failed to handle single dots correctly in '{input}'"
 			);
 		}
 
@@ -219,8 +216,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Should preserve parent directory references in '{}'",
-				input
+				"Should preserve parent directory references in '{input}'"
 			);
 		}
 
@@ -242,8 +238,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Failed to remove Windows prefix in '{}'",
-				input
+				"Failed to remove Windows prefix in '{input}'"
 			);
 		}
 
@@ -286,8 +281,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Should preserve trailing slash in '{}'",
-				input
+				"Should preserve trailing slash in '{input}'"
 			);
 		}
 
@@ -316,8 +310,7 @@ mod tests {
 			assert_eq!(
 				normalized.as_str(),
 				expected,
-				"Failed to normalize complex path '{}'",
-				input
+				"Failed to normalize complex path '{input}'"
 			);
 		}
 

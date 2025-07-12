@@ -95,8 +95,7 @@ mod tests {
 			// -- Check: Verify returned depth matches expected value
 			assert_eq!(
 				depth, expected,
-				"For patterns {:?}, expected depth {}, got {}",
-				patterns, expected, depth
+				"For patterns {patterns:?}, expected depth {expected}, got {depth}",
 			);
 		}
 		Ok(())
@@ -120,8 +119,7 @@ mod tests {
 			// -- Check: Verify returned depth equals expected value
 			assert_eq!(
 				depth, expected,
-				"For patterns {:?} with provided depth {}, expected depth {}, got {}",
-				patterns, provided_depth, expected, depth
+				"For patterns {patterns:?} with provided depth {provided_depth}, expected depth {expected}, got {depth}",
 			);
 		}
 		Ok(())

@@ -50,16 +50,14 @@ fn test_spath_starts_with_simple() -> Result<()> {
 
 		assert_eq!(
 			actual_bool, expected_bool,
-			"Path: '{}', Prefix: '{}'. Expected: {}, Got: {}",
-			path_str, prefix_str, expected_bool, actual_bool
+			"Path: '{path_str}', Prefix: '{prefix_str}'. Expected: {expected_bool}, Got: {actual_bool}"
 		);
 
 		// Test with &str directly
 		let actual_bool_str_prefix = spath.starts_with(prefix_str);
 		assert_eq!(
 			actual_bool_str_prefix, expected_bool,
-			"Path: '{}', Prefix (str): '{}'. Expected: {}, Got: {}",
-			path_str, prefix_str, expected_bool, actual_bool_str_prefix
+			"Path: '{path_str}', Prefix (str): '{prefix_str}'. Expected: {expected_bool}, Got: {actual_bool_str_prefix}"
 		);
 	}
 
@@ -151,10 +149,7 @@ fn test_spath_replace_prefix_simple() -> Result<()> {
 		assert_eq!(
 			actual_path.as_str(),
 			expected_path.as_str(),
-			"Failed for: original='{}', base='{}', with='{}'",
-			original_str,
-			base_str,
-			with_str
+			"Failed for: original='{original_str}', base='{base_str}', with='{with_str}'"
 		);
 	}
 
@@ -221,10 +216,7 @@ fn test_spath_into_replace_prefix_simple() -> Result<()> {
 		assert_eq!(
 			actual_path.as_str(),
 			expected_path.as_str(),
-			"Failed for: original='{}', base='{}', with='{}'",
-			original_str,
-			base_str,
-			with_str
+			"Failed for: original='{original_str}', base='{base_str}', with='{with_str}'"
 		);
 
 		// Check if the original path was indeed consumed or returned if unchanged
