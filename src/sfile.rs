@@ -197,19 +197,12 @@ impl SFile {
 		Ok(self.meta()?.modified_epoch_us)
 	}
 
-	/// Returns the file size in bytes as `i64`.
-	/// Note: In the highly unlikely event that the size exceeds `i64::MAX`,
-	///       `i64::MAX` is returned. `i64::MAX` represents 8,388,607 terabytes,
-	///       providing ample margin before it becomes a concern.
+	/// Returns the file size in bytes as `u64`.
 	#[deprecated = "use spath.meta()"]
-	pub fn file_size(&self) -> Result<i64> {
+	pub fn file_size(&self) -> Result<u64> {
 		let path = self.std_path();
 		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
-		let size = match metadata.len().try_into() {
-			Ok(v) => v,
-			Err(_) => i64::MAX,
-		};
-		Ok(size)
+		Ok(metadata.len())
 	}
 }
 

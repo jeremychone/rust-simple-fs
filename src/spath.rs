@@ -211,7 +211,7 @@ impl SPath {
 		let created_epoch_us = created_epoch_us.unwrap_or(modified_epoch_us);
 
 		// -- Get size
-		let size = if metadata.is_file() { metadata.len() as i64 } else { 0 };
+		let size = if metadata.is_file() { metadata.len() } else { 0 };
 
 		Ok(SMeta {
 			created_epoch_us,
