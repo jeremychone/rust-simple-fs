@@ -20,13 +20,14 @@ pub struct SMeta {
 
 // region:    --- Pretty Size
 
-/// Formats a byte size as a pretty, fixed-width (10 char) string with unit alignment.
+/// Formats a byte size as a pretty, fixed-width (9 char) string with unit alignment.
 /// The output format is tailored to align nicely in monospaced tables.
 ///
 /// - Number is always 6 character, always right aligned.
+/// - Empty char
 /// - Unit is always 2 chars, left aligned. So, for Byte, "B", it will be "B "
 /// - When below 1K Byte, do not have any digits
-/// - Otehrwise, always 2 digit, rounded
+/// - Otherwise, always 2 digit, rounded
 ///
 /// ### Examples
 ///
