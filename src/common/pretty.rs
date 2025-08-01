@@ -1,24 +1,72 @@
-/// A simplified file metadata structure with common, normalized fields.
-/// All fields are guaranteed to be present.
-pub struct SMeta {
-	/// Creation time since the Unix epoch in microseconds.
-	/// If unavailable, this may fall back to the modification time.
-	pub created_epoch_us: i64,
+// region:    --- Pretty Size
 
-	/// Last modification time since the Unix epoch in microseconds.
-	pub modified_epoch_us: i64,
+use derive_more::From;
 
-	/// File size in bytes. Will be 0 for directories or when unavailable.
-	pub size: u64,
-
-	/// Whether the path is a regular file.
-	pub is_file: bool,
-
-	/// Whether the path is a directory.
-	pub is_dir: bool,
+#[derive(Debug, Clone, From)]
+pub struct PrettySizeOptions {
+	#[from]
+	lowest_unit: SizeUnit,
 }
 
-// region:    --- Pretty Size
+impl From<&str> for PrettySizeOptions {
+	fn from(val: &str) -> Self {
+		SizeUnit::new(val).into()
+	}
+}
+
+impl From<&String> for PrettySizeOptions {
+	fn from(val: &String) -> Self {
+		SizeUnit::new(val).into()
+	}
+}
+
+impl From<String> for PrettySizeOptions {
+	fn from(val: String) -> Self {
+		SizeUnit::new(&val).into()
+	}
+}
+
+#[derive(Debug, Clone, Default)]
+pub enum SizeUnit {
+	#[default]
+	B,
+	KB,
+	MB,
+	GB,
+	TB,
+}
+
+impl SizeUnit {
+	/// Will return
+	pub fn new(val: &str) -> Self {
+		match val.to_uppercase().as_str() {
+			"B" => Self::B,
+			"KB" => Self::KB,
+			"MB" => Self::MB,
+			"GB" => Self::GB,
+			"TB" => Self::TB,
+			_ => Self::B,
+		}
+	}
+}
+
+impl From<&str> for SizeUnit {
+	fn from(val: &str) -> Self {
+		Self::new(val)
+	}
+}
+
+impl From<&String> for SizeUnit {
+	fn from(val: &String) -> Self {
+		Self::new(val)
+	}
+}
+
+impl From<String> for SizeUnit {
+	fn from(val: String) -> Self {
+		Self::new(&val)
+	}
+}
 
 /// Formats a byte size as a pretty, fixed-width (9 char) string with unit alignment.
 /// The output format is tailored to align nicely in monospaced tables.
