@@ -2,7 +2,7 @@
 
 use derive_more::From;
 
-#[derive(Debug, Clone, From)]
+#[derive(Debug, Default, Clone, From)]
 pub struct PrettySizeOptions {
 	#[from]
 	lowest_unit: SizeUnit,
@@ -48,6 +48,18 @@ impl SizeUnit {
 			_ => Self::B,
 		}
 	}
+
+	/// Index of the unit in the `UNITS` array used by [`pretty_size_with_options`].
+	#[inline]
+	pub fn idx(&self) -> usize {
+		match self {
+			Self::B => 0,
+			Self::KB => 1,
+			Self::MB => 2,
+			Self::GB => 3,
+			Self::TB => 4,
+		}
+	}
 }
 
 impl From<&str> for SizeUnit {
@@ -87,20 +99,60 @@ impl From<String> for SizeUnit {
 ///
 /// NOTE: if in simple-fs, migh call it pretty_size()
 pub fn pretty_size(size_in_bytes: u64) -> String {
-	const UNITS: [&str; 6] = ["B", "KB", "MB", "GB", "TB", "PB"];
-	let mut size = size_in_bytes as f64;
-	let mut unit = 0;
+	pretty_size_with_options(size_in_bytes, PrettySizeOptions::default())
+}
 
-	// Determine which unit to use
-	while size >= 1000.0 && unit < UNITS.len() - 1 {
+/// Formats a byte size as a pretty, fixed-width (9 char) string with unit alignment.
+/// The output format is tailored to align nicely in monospaced tables.
+///
+/// - Number is always 6 character, always right aligned.
+/// - Empty char
+/// - Unit is always 2 chars, left aligned. So, for Byte, "B", it will be "B "
+/// - When below 1K Byte, do not have any digits
+/// - Otherwise, always 2 digit, rounded
+///
+/// ### PrettySizeOptions
+///
+/// - `lowest_unit`
+///   Define the lowest unit to consider,
+///   For example, if `MB`, then, B and KB will be expressed in decimal
+///   following the formatting rules.
+///
+/// NOTE: From String, &str, .. are implemented, so `PrettySizeOptions::from("MB")` will default to
+///       `PrettySizeOptions { lowest_unit: SizeUnit::MB }` (if string not match, will default to `SizeUnit::MB`)
+///
+/// ### Examples
+///
+/// `777`           -> `"   777 B "`
+/// `8777`          -> `"  8.78 KB"`
+/// `88777`         -> `" 88.78 KB"`
+/// `888777`        -> `"888.78 KB"`
+/// `2_345_678_900` -> `"  2.35 GB"`
+///
+/// NOTE: if in simple-fs, migh call it pretty_size()
+pub fn pretty_size_with_options(size_in_bytes: u64, options: impl Into<PrettySizeOptions>) -> String {
+	let options = options.into();
+
+	const UNITS: [&str; 6] = ["B", "KB", "MB", "GB", "TB", "PB"];
+
+	// -- Step 1: shift the value so that we start at the minimum unit requested.
+	let min_unit_idx = options.lowest_unit.idx();
+	let mut size = size_in_bytes as f64;
+	for _ in 0..min_unit_idx {
 		size /= 1000.0;
-		unit += 1;
+	}
+	let mut unit_idx = min_unit_idx;
+
+	// -- Step 2: continue bubbling up if the number is >= 1000.
+	while size >= 1000.0 && unit_idx < UNITS.len() - 1 {
+		size /= 1000.0;
+		unit_idx += 1;
 	}
 
-	let unit_str = UNITS[unit];
+	let unit_str = UNITS[unit_idx];
 
-	// Note: The logic is derived from the test cases, which have specific formatting rules.
-	if unit == 0 {
+	// -- Step 3: formatting
+	if unit_idx == 0 {
 		// Bytes: integer, pad to 6, then add " B "
 		let number_str = format!("{size_in_bytes:>6}");
 		format!("{number_str} {unit_str} ")
@@ -145,7 +197,25 @@ mod tests {
 			assert_eq!(actual, expected, "input: {input}");
 		}
 
-		// -- Check
+		Ok(())
+	}
+
+	#[test]
+	fn test_pretty_size_with_lowest_unit() -> Result<()> {
+		// -- Setup
+		let options = PrettySizeOptions::from("MB");
+		let cases = [
+			//
+			(88777, "  0.09 MB"),
+			(888777, "  0.89 MB"),
+			(1_234_567, "  1.23 MB"),
+		];
+
+		// -- Exec / Check
+		for &(input, expected) in &cases {
+			let actual = pretty_size_with_options(input, options.clone());
+			assert_eq!(actual, expected, "input: {input}");
+		}
 
 		Ok(())
 	}
