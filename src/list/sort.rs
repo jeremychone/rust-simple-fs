@@ -52,11 +52,16 @@ fn match_index_for_path(path: &SPath, matchers: &[(usize, GlobMatcher)], end_wei
 		return usize::MAX;
 	}
 
+	// Normalize the input used for matching: many callers produce paths that start with "./".
+	// Glob patterns typically don't include that leading "./", so strip it for matching purposes.
+	let s = path.as_str();
+	let match_input = s.strip_prefix("./").unwrap_or(s);
+
 	if end_weighted {
 		// Use the last matching glob index (from the end).
 		let mut found: Option<usize> = None;
 		for (idx, gm) in matchers.iter().map(|(i, m)| (*i, m)) {
-			if gm.is_match(path) {
+			if gm.is_match(match_input) {
 				found = Some(idx);
 			}
 		}
@@ -64,7 +69,7 @@ fn match_index_for_path(path: &SPath, matchers: &[(usize, GlobMatcher)], end_wei
 	} else {
 		// Use the first matching glob index (from the beginning).
 		for (idx, gm) in matchers.iter().map(|(i, m)| (*i, m)) {
-			if gm.is_match(path) {
+			if gm.is_match(match_input) {
 				return idx;
 			}
 		}
@@ -81,69 +86,22 @@ mod tests {
 	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>; // For tests.
 
 	use super::*;
-
-	#[test]
-	fn test_list_sort_sort_files_by_globs_end_weighted_false() -> Result<()> {
-		// -- Setup & Fixtures
-		let globs = ["src/**", "src/list/**", "src/list/sort.rs"];
-		let matchers: Vec<(usize, GlobMatcher)> = globs
-			.iter()
-			.enumerate()
-			.map(|(i, g)| {
-				let gm = Glob::new(g).map_err(|e| format!("bad glob: {g} - {e}"))?.compile_matcher();
-				Ok((i, gm))
-			})
-			.collect::<core::result::Result<_, String>>()
-			.map_err(|e| format!("glob build failed: {e}"))?;
-
-		let p_main = SPath::new("src/main.rs"); // May or may not exist; used for logic-only test.
-		let p_sort = SPath::new("src/list/sort.rs");
-		let p_lib = SPath::new("src/lib.rs");
-
-		// -- Exec & Check
-		// For end_weighted = false, first match is used.
-		let i_main = super::match_index_for_path(&p_main, &matchers, false);
-		let i_sort = super::match_index_for_path(&p_sort, &matchers, false);
-		let i_lib = super::match_index_for_path(&p_lib, &matchers, false);
-
-		// Expectations:
-		// - "src/main.rs" should match "src/**" (index 0) if exists, else MAX (logic still holds).
-		// - "src/list/sort.rs" first matches "src/**" (index 0), even though later globs also match.
-		// - "src/lib.rs" should match "src/**" (index 0) if exists, else MAX.
-		assert!(i_sort == 0 || i_sort == usize::MAX);
-		assert!(i_main == 0 || i_main == usize::MAX);
-		assert!(i_lib == 0 || i_lib == usize::MAX);
-
-		Ok(())
-	}
+	use crate::list_files;
 
 	#[test]
 	fn test_list_sort_sort_files_by_globs_end_weighted_true() -> Result<()> {
 		// -- Setup & Fixtures
-		let globs = ["src/**", "src/list/**", "src/list/sort.rs"];
-		let matchers: Vec<(usize, GlobMatcher)> = globs
-			.iter()
-			.enumerate()
-			.map(|(i, g)| {
-				let gm = Glob::new(g).map_err(|e| format!("bad glob: {g} - {e}"))?.compile_matcher();
-				Ok((i, gm))
-			})
-			.collect::<core::result::Result<_, String>>()
-			.map_err(|e| format!("glob build failed: {e}"))?;
+		let globs = ["src/**/*", "src/common/**/*.*", "src/list/sort.rs"];
+		let files = list_files("./", Some(&globs), None)?;
 
-		let p_sort = SPath::new("src/list/sort.rs");
-		let p_list_mod = SPath::new("src/list/mod.rs");
+		// -- Exec
+		let files = sort_by_globs(files, &globs, true)?;
 
-		// -- Exec & Check
-		// For end_weighted = true, last match is used.
-		let i_sort = super::match_index_for_path(&p_sort, &matchers, true);
-		let i_list_mod = super::match_index_for_path(&p_list_mod, &matchers, true);
+		// -- Check
+		let file_names = files.into_iter().map(|v| v.to_string()).collect::<Vec<_>>();
+		let last_file = file_names.last().ok_or("Should have a least one")?;
 
-		// Expectations:
-		// - "src/list/sort.rs" should take the last matching pattern "src/list/sort.rs" (index 2) if available.
-		// - "src/list/mod.rs" should take the last matching "src/list/**" (index 1) if available.
-		assert!(i_sort == 2 || i_sort == usize::MAX);
-		assert!(i_list_mod == 1 || i_list_mod == usize::MAX);
+		assert_eq!(last_file, "./src/list/sort.rs");
 
 		Ok(())
 	}
