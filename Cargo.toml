@@ -31,13 +31,13 @@ camino = "1" # trying this lib out
 walkdir = "2"
 globset = "0.4"
 notify = "8"
-notify-debouncer-full = "0.5"
+notify-debouncer-full = "0.6"
 # -- Feature: json, toml
 serde = { version = "1", features = ["derive"], optional = true}
 # -- Feature: json
 serde_json = { version = "1", optional = true}
 # -- Feature: toml
-toml = { version = "0.8", optional = true}
+toml = { version = "0.9", optional = true}
 # -- Features: bin-nums
 byteorder = { version = "1.5", optional = true}
 pathdiff = { version = "0.2.2", features = ["camino"]}
