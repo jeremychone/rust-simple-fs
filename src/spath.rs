@@ -200,14 +200,14 @@ impl SPath {
 			.duration_since(UNIX_EPOCH)
 			.map_err(|ex| Error::CantGetMetadata((path, ex).into()))?
 			.as_micros()
-			.min(i64::max as u128) as i64;
+			.min(i64::MAX as u128) as i64;
 
 		// -- Get created (If not found, will get modified)
 		let created_epoch_us = metadata
 			.modified()
 			.ok()
 			.and_then(|c| c.duration_since(UNIX_EPOCH).ok())
-			.map(|c| c.as_micros().min(i64::max as u128) as i64);
+			.map(|c| c.as_micros().min(i64::MAX as u128) as i64);
 		let created_epoch_us = created_epoch_us.unwrap_or(modified_epoch_us);
 
 		// -- Get size

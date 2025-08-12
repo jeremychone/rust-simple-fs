@@ -123,11 +123,9 @@ impl GlobsFileIter {
 						// NOTE 1: It is important not to glob check the includes for directories, as they will always fail.
 						if let Some(exclude_globs) = exclude_globs_set_clone.as_ref() {
 							// Check with proper path handling based on relative_glob setting
-							if use_relative_glob {
-								if let Some(rel_path) = path.diff(&base_clone) {
-									let stop = exclude_globs.is_match(&rel_path);
-									return !stop;
-								}
+							if use_relative_glob && let Some(rel_path) = path.diff(&base_clone) {
+								let stop = exclude_globs.is_match(&rel_path);
+								return !stop;
 							}
 							// Check with absolute path if relative path not available or relative_glob is false
 							let stop = exclude_globs.is_match(&path);
@@ -152,10 +150,10 @@ impl GlobsFileIter {
 				if let Some(exclude) = exclude_globs_set_clone.as_ref() {
 					// Use appropriate path based on relative_glob setting
 					if use_relative_glob {
-						if let Some(rel_path) = sfile.diff(&main_base_clone) {
-							if exclude.is_match(&rel_path) {
-								return false;
-							}
+						if let Some(rel_path) = sfile.diff(&main_base_clone)
+							&& exclude.is_match(&rel_path)
+						{
+							return false;
 						}
 					} else if exclude.is_match(sfile) {
 						return false;
