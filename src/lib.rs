@@ -17,14 +17,15 @@ pub use self::error::{Error, Result};
 
 pub use common::*;
 pub use dir::*;
-#[allow(unused)]
-pub use featured::*;
 pub use file::*;
 pub use list::*;
 pub use reshape::*;
 pub use sfile::*;
 pub use spath::*;
 pub use watch::*;
+
+#[allow(unused)]
+pub use featured::*;
 
 // endregion: --- Modules
 

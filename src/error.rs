@@ -30,6 +30,10 @@ pub enum Error {
 	#[display("File path has no parent directory: '{_0}'")]
 	FileHasNoParent(String),
 
+	// -- Sort
+	#[display("Cannot sort by globs.\nCause: {cause}")]
+	SortByGlobs { cause: String },
+
 	// -- Metadata
 	#[display("Cannot get metadata for path '{}'\nCause: {}", _0.path, _0.cause)]
 	CantGetMetadata(PathAndCause),
@@ -84,6 +88,14 @@ pub enum Error {
 	#[cfg(feature = "with-toml")]
 	#[display("Cannot write TOML to path '{}'\nCause: {}", _0.path, _0.cause)]
 	TomlCantWrite(PathAndCause),
+}
+
+impl Error {
+	pub fn sort_by_globs(cause: impl std::fmt::Display) -> Error {
+		Error::SortByGlobs {
+			cause: cause.to_string(),
+		}
+	}
 }
 
 // region:    --- Cause Types
