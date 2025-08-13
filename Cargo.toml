@@ -1,6 +1,6 @@
 [package]
 name = "simple-fs"
-version = "0.7.2"
+version = "0.7.3-WIP"
 edition = "2024"
 authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
 license = "MIT OR Apache-2.0"
