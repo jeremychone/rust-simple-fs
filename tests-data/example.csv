@@ -1,0 +1,5 @@
+name,age,comment
+Alice,30,"hello, world"
+Bob,25,"Line with ""quote"""
+Carol,28,"multi
+line with ""quotes"" inside"

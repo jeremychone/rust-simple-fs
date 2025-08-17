@@ -121,3 +121,41 @@ fn csv_spans_from_reader<R: Read>(r: &mut R) -> io::Result<Vec<(usize, usize)>> 
 }
 
 // endregion: --- Support
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+	type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>; // For tests.
+
+	use super::*;
+
+	#[test]
+	fn test_span_csv_line_span_csv_spans_simple() -> Result<()> {
+		// -- Setup & Fixtures
+		let path = "tests-data/example.csv";
+
+		// -- Exec
+		let spans = csv_spans(path)?;
+
+		// -- Check
+		assert_eq!(spans.len(), 4, "should find 4 CSV records (including header)");
+
+		let expected = [
+			"name,age,comment",
+			"Alice,30,\"hello, world\"",
+			"Bob,25,\"Line with \"\"quote\"\"\"",
+			"Carol,28,\"multi\nline with \"\"quotes\"\" inside\"",
+		];
+
+		for (i, exp) in expected.iter().enumerate() {
+			let (s, e) = spans.get(i).copied().ok_or("missing expected span")?;
+			let got = crate::read_span(path, s, e)?;
+			assert_eq!(&got, exp);
+		}
+
+		Ok(())
+	}
+}
+
+// endregion: --- Tests
