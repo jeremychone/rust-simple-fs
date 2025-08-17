@@ -45,3 +45,4 @@ path-clean = "1.0.1"
 # -- Other
 derive_more = {version = "2.0", features = ["from", "display"] }
 flume = "0.11.1"
+memchr = "2"

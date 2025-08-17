@@ -14,7 +14,10 @@ pub enum Error {
 	#[display("Path has no file name: '{_0}'")]
 	PathHasNoFileName(String),
 	#[display("Strip Prefix fail. Path '{path}' does not a base of '{prefix}'")]
-	StripPrefix { prefix: String, path: String },
+	StripPrefix {
+		prefix: String,
+		path: String,
+	},
 
 	// -- File
 	#[display("File not found at path: '{_0}'")]
@@ -32,7 +35,9 @@ pub enum Error {
 
 	// -- Sort
 	#[display("Cannot sort by globs.\nCause: {cause}")]
-	SortByGlobs { cause: String },
+	SortByGlobs {
+		cause: String,
+	},
 
 	// -- Metadata
 	#[display("Cannot get metadata for path '{}'\nCause: {}", _0.path, _0.cause)]
@@ -54,19 +59,36 @@ pub enum Error {
 
 	// -- Glob
 	#[display("Cannot create glob pattern '{glob}'.\nCause: {cause}")]
-	GlobCantNew { glob: String, cause: globset::Error },
+	GlobCantNew {
+		glob: String,
+		cause: globset::Error,
+	},
 	#[display("Cannot build glob set from '{globs:?}'.\nCause: {cause}")]
-	GlobSetCantBuild { globs: Vec<String>, cause: globset::Error },
+	GlobSetCantBuild {
+		globs: Vec<String>,
+		cause: globset::Error,
+	},
 
 	// -- Watch
 	#[display("Failed to watch path '{path}'.\nCause: {cause}")]
-	FailToWatch { path: String, cause: String },
+	FailToWatch {
+		path: String,
+		cause: String,
+	},
 	#[display("Cannot watch path because it was not found: '{_0}'")]
 	CantWatchPathNotFound(String),
 
+	// -- Span
+	SpanInvalidStartAfterEnd,
+	SpanOutOfBounds,
+	SpanInvalidUtf8,
+
 	// -- Other
 	#[display("Cannot compute relative path from '{base}' to '{path}'")]
-	CannotDiff { path: String, base: String },
+	CannotDiff {
+		path: String,
+		base: String,
+	},
 	#[display("Cannot Canonicalize path '{}'\nCause: {}", _0.path, _0.cause)]
 	CannotCanonicalize(PathAndCause),
 

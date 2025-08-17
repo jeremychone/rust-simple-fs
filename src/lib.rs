@@ -9,6 +9,7 @@ mod list;
 mod reshape;
 mod sfile;
 mod spath;
+mod span;
 mod watch;
 
 pub use self::error::{Error, Result};
@@ -22,6 +23,7 @@ pub use list::*;
 pub use reshape::*;
 pub use sfile::*;
 pub use spath::*;
+pub use span::*;
 pub use watch::*;
 
 #[allow(unused)]

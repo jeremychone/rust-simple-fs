@@ -20,6 +20,12 @@ pub fn read_to_string(file_path: impl AsRef<Path>) -> Result<String> {
 	Ok(content)
 }
 
+pub fn open_file(path: impl AsRef<Path>) -> Result<File> {
+	let path = path.as_ref();
+	let f = File::open(path).map_err(|e| Error::FileCantOpen((path, e).into()))?;
+	Ok(f)
+}
+
 pub fn get_buf_reader(file: impl AsRef<Path>) -> Result<BufReader<File>> {
 	let file = file.as_ref();
 
