@@ -63,7 +63,7 @@ fn line_spans_from_reader<R: Read>(r: &mut R) -> io::Result<Vec<(usize, usize)>>
 	Ok(spans)
 }
 
- // endregion: --- Support
+// endregion: --- Support
 
 // region:    --- Tests
 

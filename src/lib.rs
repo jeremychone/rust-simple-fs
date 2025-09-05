@@ -8,8 +8,8 @@ mod file;
 mod list;
 mod reshape;
 mod sfile;
-mod spath;
 mod span;
+mod spath;
 mod watch;
 
 pub use self::error::{Error, Result};
@@ -22,8 +22,8 @@ pub use file::*;
 pub use list::*;
 pub use reshape::*;
 pub use sfile::*;
-pub use spath::*;
 pub use span::*;
+pub use spath::*;
 pub use watch::*;
 
 #[allow(unused)]

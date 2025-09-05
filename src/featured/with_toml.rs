@@ -1,5 +1,5 @@
 use crate::file::create_file;
-use crate::{read_to_string, Error, Result};
+use crate::{Error, Result, read_to_string};
 use std::fs;
 use std::path::Path;
 

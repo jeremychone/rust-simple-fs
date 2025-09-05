@@ -1,5 +1,5 @@
-use crate::{get_buf_reader, get_buf_writer};
 use crate::{Error, Result};
+use crate::{get_buf_reader, get_buf_writer};
 use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use std::io::{Read, Write};
 use std::path::Path;
