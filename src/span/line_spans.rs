@@ -6,10 +6,10 @@ use std::io::{self, Read};
 /// Return byte ranges [start, end) for each line in the file at `path`,
 /// splitting on '\n' and trimming a preceding '\r' (CRLF) even across chunk boundaries.
 /// Runs in O(n) time, streaming; does not allocate the whole file.
-pub fn line_spans(path: impl Into<SPath>) -> Result<Vec<(usize, usize)>> {
-	let path = path.into();
-	let mut f = open_file(&path)?;
-	let res = line_spans_from_reader(&mut f).map_err(|err| Error::FileCantRead((&path, err).into()))?;
+pub fn line_spans(path: impl AsRef<SPath>) -> Result<Vec<(usize, usize)>> {
+	let path = path.as_ref();
+	let mut f = open_file(path)?;
+	let res = line_spans_from_reader(&mut f).map_err(|err| Error::FileCantRead((path, err).into()))?;
 	Ok(res)
 }
 
@@ -76,10 +76,10 @@ mod tests {
 	#[test]
 	fn test_span_line_span_line_spans_simple() -> Result<()> {
 		// -- Setup & Fixtures
-		let path = "tests-data/example.csv";
+		let path = SPath::from("tests-data/example.csv");
 
 		// -- Exec
-		let spans = line_spans(path)?;
+		let spans = line_spans(&path)?;
 
 		// -- Check
 		assert_eq!(spans.len(), 5, "should find 5 physical lines");
@@ -94,7 +94,7 @@ mod tests {
 
 		for (i, exp) in expected.iter().enumerate() {
 			let (s, e) = spans.get(i).copied().ok_or("missing expected line span")?;
-			let got = crate::read_span(path, s, e)?;
+			let got = crate::read_span(&path, s, e)?;
 			assert_eq!(&got, exp);
 		}
 

@@ -7,15 +7,15 @@ use std::io::{self, Read};
 /// - For CRLF, the '\r' is excluded from the end bound.
 /// - Supports `""` as an escaped quote inside quoted fields.
 /// - Streams in chunks; does *not* read the whole file into memory.
-pub fn csv_spans(path: impl Into<SPath>) -> Result<Vec<(usize, usize)>> {
-	let path = path.into();
-	let mut f = open_file(&path)?;
-	csv_spans_from_reader(&mut f).map_err(|err| Error::FileCantRead((&path, err).into()))
+pub fn csv_row_spans(path: impl AsRef<SPath>) -> Result<Vec<(usize, usize)>> {
+	let path = path.as_ref();
+	let mut f = open_file(path)?;
+	csv_row_spans_from_reader(&mut f).map_err(|err| Error::FileCantRead((path, err).into()))
 }
 
 // region:    --- Support
 
-fn csv_spans_from_reader<R: Read>(r: &mut R) -> io::Result<Vec<(usize, usize)>> {
+fn csv_row_spans_from_reader<R: Read>(r: &mut R) -> io::Result<Vec<(usize, usize)>> {
 	let mut spans: Vec<(usize, usize)> = Vec::new();
 
 	// 64 KiB chunks: good balance of cacheability vs syscalls.
@@ -131,12 +131,12 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_span_csv_line_span_csv_spans_simple() -> Result<()> {
+	fn test_span_csv_row_spans_simple() -> Result<()> {
 		// -- Setup & Fixtures
-		let path = "tests-data/example.csv";
+		let path = SPath::from("tests-data/example.csv");
 
 		// -- Exec
-		let spans = csv_spans(path)?;
+		let spans = csv_row_spans(&path)?;
 
 		// -- Check
 		assert_eq!(spans.len(), 4, "should find 4 CSV records (including header)");
@@ -150,7 +150,7 @@ mod tests {
 
 		for (i, exp) in expected.iter().enumerate() {
 			let (s, e) = spans.get(i).copied().ok_or("missing expected span")?;
-			let got = crate::read_span(path, s, e)?;
+			let got = crate::read_span(&path, s, e)?;
 			assert_eq!(&got, exp);
 		}
 

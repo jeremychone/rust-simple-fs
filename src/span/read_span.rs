@@ -8,13 +8,13 @@ use std::os::unix::fs::FileExt as _;
 use std::os::windows::fs::FileExt as _;
 
 /// Read a (start,end) half-open span and return a string.
-pub fn read_span(path: impl Into<SPath>, start: usize, end: usize) -> Result<String> {
+pub fn read_span(path: impl AsRef<SPath>, start: usize, end: usize) -> Result<String> {
 	let len = end.checked_sub(start).ok_or(Error::SpanInvalidStartAfterEnd)?;
 
-	let path = path.into();
-	let file = open_file(&path)?;
+	let path = path.as_ref();
+	let file = open_file(path)?;
 
-	let res = read_exact_at(&file, start as u64, len).map_err(|err| Error::FileCantRead((&path, err).into()))?;
+	let res = read_exact_at(&file, start as u64, len).map_err(|err| Error::FileCantRead((path, err).into()))?;
 
 	let txt = String::from_utf8(res).map_err(|_| Error::SpanInvalidUtf8)?;
 
