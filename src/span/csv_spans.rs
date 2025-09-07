@@ -2,7 +2,7 @@ use crate::spath::SPath;
 use crate::{Error, Result, open_file};
 use std::io::{self, Read};
 
-/// CSV-aware record spans: returns byte ranges [start, end) for each *record*.
+/// CSV-aware record spans: returns byte ranges [start, end) for each *row*.
 /// - Treats '\n' as a record separator only when **not** inside quotes.
 /// - For CRLF, the '\r' is excluded from the end bound.
 /// - Supports `""` as an escaped quote inside quoted fields.

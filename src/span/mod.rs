@@ -1,11 +1,11 @@
 // region:    --- Modules
 
-mod csv_line_span;
-mod line_span;
+mod csv_spans;
+mod line_spans;
 mod read_span;
 
-pub use csv_line_span::*;
-pub use line_span::*;
+pub use csv_spans::*;
+pub use line_spans::*;
 pub use read_span::*;
 
 // endregion: --- Modules
