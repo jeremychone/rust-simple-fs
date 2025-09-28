@@ -2,7 +2,7 @@ use crate::{Error, Result, SPath, TOP_MAX_DEPTH};
 use camino::Utf8PathBuf;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
-pub const DEFAULT_EXCLUDE_GLOBS: &[&str] = &["**/.git", "**/.DS_Store", "**/target", "**/node_modules"];
+pub const DEFAULT_EXCLUDE_GLOBS: &[&str] = &["**/.git", "**/.DS_Store"];
 
 pub fn get_glob_set(globs: &[&str]) -> Result<GlobSet> {
 	let mut builder = GlobSetBuilder::new();
