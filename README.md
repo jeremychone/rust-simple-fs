@@ -44,9 +44,11 @@ Happy coding!
 | `full`      | All the above.                                   |
 | default     | None of the above. See below.                    |
 
-## Changes
+## Notable Changes
 
-- `0.6.x` (rc for now)
+- `0.8.x` remove the 'target/' and 'node_modules/' from the default exclude (too assuming)
+- `0.7.x` `SMeta.size` is no `u64` (from `i64` ), new apis
+- `0.6.x`
   - NOW uses Utf8 by default; std path moved to `..std_path..` naming.
   - NOW normalizes all SPath to be Posix based (i.e., `/` and remove redundant `//` and `/./`)
   + `SPath/SFile`.
