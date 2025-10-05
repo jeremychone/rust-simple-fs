@@ -1,5 +1,6 @@
 /// A simplified file metadata structure with common, normalized fields.
 /// All fields are guaranteed to be present.
+#[derive(Debug, Clone)]
 pub struct SMeta {
 	/// Creation time since the Unix epoch in microseconds.
 	/// If unavailable, this may fall back to the modification time.
