@@ -11,7 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 ///
 /// - It's Posix normalized `/`, all redundant `//` and `/./` are removed
 /// - Garanteed to be UTF8
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SPath {
 	pub(crate) path_buf: Utf8PathBuf,
 }

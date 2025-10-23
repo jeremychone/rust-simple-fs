@@ -95,7 +95,12 @@ impl GlobsFileIter {
 		let max_depth = list_options.and_then(|o| o.depth);
 
 		let exclude_globs_set = Arc::new(exclude_globs_set);
-		for (group_base, patterns) in groups.into_iter() {
+		for GlobGroup {
+			base: group_base,
+			patterns,
+			prefixes,
+		} in groups.into_iter()
+		{
 			// Compute maximum depth among the group's relative glob patterns
 			let pats: Vec<&str> = patterns.iter().map(|s| s.as_str()).collect();
 			let depth = get_depth(&pats, max_depth);
@@ -103,9 +108,12 @@ impl GlobsFileIter {
 			// Build the globset for the group from its relative patterns
 			let globset = get_glob_set(&pats)?;
 
+			let allowed_prefixes = Arc::new(prefixes);
+
 			// Clone group_base for use in closures
-			let base_clone = group_base.clone();
+			let base_clone_for_dirs = group_base.clone();
 			let exclude_globs_set_clone = exclude_globs_set.clone();
+			let allowed_prefixes_for_dirs = allowed_prefixes.clone();
 			let iter = WalkDir::new(group_base.path())
 				.max_depth(depth)
 				.into_iter()
@@ -117,25 +125,30 @@ impl GlobsFileIter {
 					// This uses the walkdir file_type which does not make a system call
 					let is_dir = e.file_type().is_dir();
 
-					// here we are filtering only the dir.
 					if is_dir {
-						// If it's a directory, check the excludes.
-						// NOTE 1: It is important not to glob check the includes for directories, as they will always fail.
 						if let Some(exclude_globs) = exclude_globs_set_clone.as_ref() {
-							// Check with proper path handling based on relative_glob setting
-							if use_relative_glob && let Some(rel_path) = path.diff(&base_clone) {
-								let stop = exclude_globs.is_match(&rel_path);
-								return !stop;
+							if use_relative_glob {
+								if let Some(rel_path) = path.diff(&base_clone_for_dirs)
+									&& exclude_globs.is_match(&rel_path)
+								{
+									return false;
+								}
+							} else if exclude_globs.is_match(&path) {
+								return false;
 							}
-							// Check with absolute path if relative path not available or relative_glob is false
-							let stop = exclude_globs.is_match(&path);
-							!stop
-						} else {
-							true
 						}
-					} else {
-						true
+
+						if !allowed_prefixes_for_dirs.is_empty()
+							&& !directory_matches_allowed_prefixes(
+								&path,
+								&base_clone_for_dirs,
+								allowed_prefixes_for_dirs.as_ref(),
+							) {
+							return false;
+						}
 					}
+
+					true
 				})
 				.filter_map(|entry| entry.ok())
 				.filter(|entry| entry.file_type().is_file())
@@ -180,13 +193,12 @@ impl GlobsFileIter {
 
 		// Use scan to keep track of absolute file paths and remove duplicates.
 		let dedup_iter = combined_iter
-			.scan(HashSet::new(), |seen, file| {
-				let path_str = file.to_string();
-				if seen.contains(&path_str) {
-					Some(None)
-				} else {
-					seen.insert(path_str);
+			.scan(HashSet::<SPath>::new(), |seen, file| {
+				let path = file.path().clone();
+				if seen.insert(path) {
 					Some(Some(file))
+				} else {
+					Some(None)
 				}
 			})
 			.flatten();
@@ -204,9 +216,15 @@ impl Iterator for GlobsFileIter {
 	}
 }
 
+struct GlobGroup {
+	base: SPath,
+	patterns: Vec<String>,
+	prefixes: Vec<String>,
+}
+
 /// Processes the provided globs into groups with collapsed base directories.
 /// For relative globs, the pattern is adjusted to be relative to main_base.
-fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<String>)>> {
+fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 	let mut groups: Vec<(SPath, Vec<String>)> = Vec::new();
 	let mut relative_patterns: Vec<String> = Vec::new();
 
@@ -254,72 +272,199 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<(SPath, Vec<St
 	// Merge groups with common base directories.
 	// Sort groups by base path length (shorter first).
 	groups.sort_by_key(|(base, _)| base.as_str().len());
-	let mut final_groups: Vec<(SPath, Vec<String>)> = Vec::new();
+	let mut final_groups: Vec<GlobGroup> = Vec::new();
 	for (base, patterns) in groups {
 		let mut merged = false;
-		for (existing_base, existing_patterns) in final_groups.iter_mut() {
-			if is_prefix(existing_base, &base) {
+		for existing_group in final_groups.iter_mut() {
+			if existing_group.base.starts_with(&base) {
 				// 'base' is a subdirectory of 'existing_base'
-				let diff = safe_diff(&base, existing_base);
+				let diff = base.diff(&existing_group.base).map(|p| p.to_string()).unwrap_or_default();
 				for pat in patterns.iter() {
 					let new_pat = if diff.is_empty() {
 						pat.to_string()
 					} else {
-						format!("{diff}/{pat}")
+						SPath::new(&diff).join(pat).to_string()
 					};
-					existing_patterns.push(new_pat);
+					existing_group.patterns.push(new_pat.clone());
+					append_adjusted(&mut existing_group.prefixes, &glob_literal_prefixes(&new_pat));
 				}
 				merged = true;
 				break;
-			} else if is_prefix(&base, existing_base) {
+			} else if base.starts_with(&existing_group.base) {
 				// 'existing_base' is a subdirectory of 'base'
-				let diff = safe_diff(existing_base, &base);
+				let diff = existing_group.base.diff(&base).map(|p| p.to_string()).unwrap_or_default();
 				let mut new_patterns = patterns.clone();
-				for pat in existing_patterns.iter() {
+				let mut new_prefixes = Vec::new();
+				for pat in patterns.iter() {
+					append_adjusted(&mut new_prefixes, &glob_literal_prefixes(pat));
+				}
+				for pat in existing_group.patterns.iter() {
 					let new_pat = if diff.is_empty() {
 						pat.clone()
 					} else {
-						format!("{diff}/{pat}")
+						SPath::new(&diff).join(pat).to_string()
 					};
-					new_patterns.push(new_pat);
+					new_patterns.push(new_pat.clone());
+					append_adjusted(&mut new_prefixes, &glob_literal_prefixes(&new_pat));
 				}
-				*existing_base = base.clone();
-				*existing_patterns = new_patterns;
+				existing_group.base = base.clone();
+				existing_group.patterns = new_patterns;
+				normalize_prefixes(&mut new_prefixes);
+				existing_group.prefixes = new_prefixes;
 				merged = true;
 				break;
 			}
 		}
 		if !merged {
-			final_groups.push((base, patterns));
+			let mut prefixes = Vec::new();
+			for pat in patterns.iter() {
+				append_adjusted(&mut prefixes, &glob_literal_prefixes(pat));
+			}
+			normalize_prefixes(&mut prefixes);
+			final_groups.push(GlobGroup {
+				base,
+				patterns,
+				prefixes,
+			});
 		}
 	}
 
 	Ok(final_groups)
 }
 
-/// Helper function to check if 'prefix' is a prefix of 'path'
-fn is_prefix(prefix: &SPath, path: &SPath) -> bool {
-	let prefix_str = prefix.as_str();
-	let path_str = path.as_str();
-	if path_str == prefix_str {
-		return true;
-	}
-	if !path_str.starts_with(prefix_str) {
-		return false;
-	}
-	let remainder = &path_str[prefix_str.len()..];
-	remainder.starts_with("/")
-}
-
-/// Helper function to safely compute the diff, returning an empty string on error.
-fn safe_diff(path: &SPath, base: &SPath) -> String {
-	path.diff(base.path()).map(|p| p.as_str().to_string()).unwrap_or_default()
-}
-
 /// Given an absolute glob pattern and its computed base, returns the relative glob
 /// by removing the base prefix and any leading path separator.
 fn relative_from_absolute(glob: &SPath, group_base: &SPath) -> String {
-	let base_str = group_base.as_str();
-	let rel = glob.as_str().strip_prefix(base_str).unwrap_or(glob.as_str());
-	rel.trim_start_matches("/").to_string()
+	glob.diff(group_base).map(|p| p.to_string()).unwrap_or_else(|| glob.to_string())
+}
+
+fn directory_matches_allowed_prefixes(path: &SPath, base: &SPath, prefixes: &[String]) -> bool {
+	if prefixes.is_empty() {
+		return true;
+	}
+	if path.as_str() == base.as_str() {
+		return true;
+	}
+
+	let Some(rel_path) = path.diff(base.path()) else {
+		return true;
+	};
+
+	let rel_str = rel_path.as_str().trim_start_matches("./");
+	if rel_str.is_empty() {
+		return true;
+	}
+
+	prefixes.iter().any(|prefix| {
+		let prefix = prefix.as_str();
+		if prefix.is_empty() {
+			return true;
+		}
+
+		let rel_spath = SPath::new(rel_str);
+		let prefix_spath = SPath::new(prefix);
+
+		rel_spath.starts_with(&prefix_spath) || prefix_spath.starts_with(&rel_spath)
+	})
+}
+
+fn glob_literal_prefixes(pattern: &str) -> Vec<String> {
+	let clean = pattern.trim_start_matches("./");
+	if clean.is_empty() {
+		return Vec::new();
+	}
+
+	let segments: Vec<&str> = clean.split('/').filter(|s| !s.is_empty() && *s != ".").collect();
+
+	// If there are no segments or only one segment (just a filename), no directory prefixes
+	if segments.len() <= 1 {
+		return Vec::new();
+	}
+
+	let mut prefixes = vec![String::new()];
+
+	// Process all segments except the last one (which is the filename/pattern)
+	for &segment in segments.iter().take(segments.len() - 1) {
+		if segment == ".." || segment_contains_wildcard(segment) {
+			break;
+		}
+
+		let mut next = Vec::new();
+		if let Some(options) = expand_brace_segment(segment) {
+			for prefix in &prefixes {
+				for option in options.iter() {
+					let new_prefix = if prefix.is_empty() {
+						option.clone()
+					} else {
+						SPath::new(prefix).join(option).to_string()
+					};
+					next.push(new_prefix);
+				}
+			}
+		} else if segment.contains('{') || segment.contains('}') {
+			break;
+		} else {
+			for prefix in &prefixes {
+				let new_prefix = if prefix.is_empty() {
+					segment.to_string()
+				} else {
+					SPath::new(prefix).join(segment).to_string()
+				};
+				next.push(new_prefix);
+			}
+		}
+
+		if next.is_empty() {
+			break;
+		}
+
+		prefixes = next;
+	}
+
+	// If we only have the empty string, return empty
+	if prefixes.len() == 1 && prefixes[0].is_empty() {
+		Vec::new()
+	} else {
+		prefixes
+	}
+}
+
+fn expand_brace_segment(segment: &str) -> Option<Vec<String>> {
+	if segment.starts_with('{') && segment.ends_with('}') {
+		let inner = &segment[1..segment.len() - 1];
+		if inner.contains('{') || inner.contains('}') {
+			return None;
+		}
+		let options: Vec<String> = inner
+			.split(',')
+			.map(|s| s.trim())
+			.filter(|s| !s.is_empty())
+			.map(|s| s.to_string())
+			.collect();
+		if options.is_empty() { None } else { Some(options) }
+	} else {
+		None
+	}
+}
+
+fn segment_contains_wildcard(segment: &str) -> bool {
+	segment.contains('*') || segment.contains('?') || segment.contains('[')
+}
+
+fn append_adjusted(target: &mut Vec<String>, values: &[String]) {
+	for value in values {
+		target.push(value.to_string());
+	}
+}
+
+fn normalize_prefixes(prefixes: &mut Vec<String>) {
+	if prefixes.is_empty() {
+		return;
+	}
+	if prefixes.iter().any(|p| p.is_empty()) {
+		prefixes.clear();
+		return;
+	}
+	prefixes.sort();
+	prefixes.dedup();
 }
