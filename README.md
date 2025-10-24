@@ -9,10 +9,10 @@
 The main construct of `simple-fs` is the `SPath` structure, which contains a `Utf8PathBuf` and ensures the following:
 
 - It is UTF-8 by contract.
-- Posix normalize the path, meaning only `/` (no `\`), and redundant `//` or `/./` are collapsed to one `./`.
+- Posix normalizes the path, meaning only `/` (no `\`), and redundant `//` or `/./` are collapsed to a single `./`.
 - It does not have any `\\?\` on Windows.
 
-The `SFile` is a File struct that contains a `SPath`.
+The `SFile` is a File struct that contains an `SPath`.
 
 By applying the above rules, path/file APIs can be drastically simplified, and both structs offer many Path functions, with `&str` as the return type.
 
@@ -20,7 +20,7 @@ This crate also offers a simple and scalable way to list or iterate on files, gi
 
 - `iter_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<impl Iter SFile>`
 - `list_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<Vec<SFile>>`
-- `ensure_dir(dir_path)` make sure all the dir paths are created.
+- `ensure_dir(dir_path)` makes sure all the directory paths are created.
 - `ensure_file_dir(file_path)` makes sure the file directory exists.
 
 The crate also includes other convenient, common APIs:
@@ -46,21 +46,22 @@ Happy coding!
 
 ## Notable Changes
 
-- `0.8.x` remove the 'target/' and 'node_modules/' from the default exclude (too assuming)
-- `0.7.x` `SMeta.size` is no `u64` (from `i64` ), new apis
+- `0.9.0-alpha.x` Same API (for now), but new optimized `list_files(...)` (hence the large version jump)
+- `0.8.x` Removed 'target/' and 'node_modules/' from the default excludes (too presumptive)
+- `0.7.x` `SMeta.size` is now `u64` (changed from `i64`), new APIs
 - `0.6.x`
-  - NOW uses Utf8 by default; std path moved to `..std_path..` naming.
-  - NOW normalizes all SPath to be Posix based (i.e., `/` and remove redundant `//` and `/./`)
+  - Now uses Utf8 by default; std path moved to `..std_path..` naming.
+  - Now normalizes all SPath to be Posix based (i.e., `/` and removes redundant `//` and `/./`).
   + `SPath/SFile`.
-  - `!` deprecate '.to_str()' now '.as_str()'
-  - `!` .diff(..) - Now take AsRef Utf8Path, return Option<SPath> (use try_diff(..) for Result)
+  - `!` Deprecated '.to_str()', now '.as_str()'
+  - `!` .diff(..) - Now takes AsRef Utf8Path, returns Option<SPath> (use try_diff(..) for Result)
   - `+` Add `collapse`, `into_collapsed`, `is_collapsed`, `try_collapse`
   - `!` `.clean(..)` is replaced by `.collapse()`
-  - `+` list/iter files/dirs - add support for negative glob patterns in include_globs (convenience)
-  - `!` API CHANGE - now all default to Utf8Path (from camino crate). `std_path...()` for the std path
-  - `^` sfile/spath - add is_absolute/is_relative passthrough
+  - `+` list/iter files/dirs - Added support for negative glob patterns in include_globs (convenience).
+  - `!` API CHANGE - Now all default to Utf8Path (from camino crate). Use `std_path...()` for the standard path.
+  - `^` sfile/spath - Added is_absolute/is_relative passthrough.
 - `0.5.0`
-  - Internal use camino, utf8path.
+  - Internally uses camino, utf8path.
   - Reimplementation of the iter_files iterator, supporting absolute path globs out of the base directory.
 - `0.4.0`
   - Update to `notify 8` (should not have any API changes)
@@ -72,6 +73,6 @@ Happy coding!
     - You can now use `*.rs` to list direct descendants and `**/*.rs` for nested files.
     - The glob also needs to include the `dir` given in the list; otherwise, set `ListOptions.relative_glob = true` to make it relative.
 - `0.3.x` from `0.2.x`
-  - API CHANGE - watch - changes the rx to be [flume](https://crates.io/crates/flume) based (works on both sync/async).
+  - API CHANGE - watch - Changed the rx to be [flume](https://crates.io/crates/flume) based (works on both sync/async).
 - `0.2.0` from `0.1.x`
-  - API CHANGE - now .file_name() and .file_stem() return Option<&str>; use .name() or .stem() to get &str.
+  - API CHANGE - Now .file_name() and .file_stem() return Option<&str>; use .name() or .stem() to get &str.
