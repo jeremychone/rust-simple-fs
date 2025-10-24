@@ -222,8 +222,18 @@ struct GlobGroup {
 	prefixes: Vec<String>,
 }
 
+// region:    --- Support
+
 /// Processes the provided globs into groups with collapsed base directories.
 /// For relative globs, the pattern is adjusted to be relative to main_base.
+//// Groups glob patterns by their longest shared base directory.
+///
+/// # Example
+///
+/// ```text
+/// inputs: main_base="/project", globs=["/project/src/**/*.rs", "*.md"]
+/// output: [GlobGroup { base="/project/src", patterns=["**/*.rs"], .. }, GlobGroup { base="/project", patterns=["*.md"], .. }]
+/// ```
 fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 	let mut groups: Vec<(SPath, Vec<String>)> = Vec::new();
 	let mut relative_patterns: Vec<String> = Vec::new();
@@ -334,10 +344,26 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 
 /// Given an absolute glob pattern and its computed base, returns the relative glob
 /// by removing the base prefix and any leading path separator.
+//// Rewrites an absolute glob so it becomes relative to `group_base`.
+///
+/// # Example
+///
+/// ```text
+/// inputs: glob="/root/a/**/*.txt", group_base="/root/a"
+/// output: "**/*.txt"
+/// ```
 fn relative_from_absolute(glob: &SPath, group_base: &SPath) -> String {
 	glob.diff(group_base).map(|p| p.to_string()).unwrap_or_else(|| glob.to_string())
 }
 
+//// Checks whether a directory path aligns with one of the candidate prefixes.
+///
+/// # Example
+///
+/// ```text
+/// inputs: path="/root/a/b", base="/root", prefixes=["a", "docs"]
+/// output: true
+/// ```
 fn directory_matches_allowed_prefixes(path: &SPath, base: &SPath, prefixes: &[String]) -> bool {
 	if prefixes.is_empty() {
 		return true;
@@ -346,13 +372,21 @@ fn directory_matches_allowed_prefixes(path: &SPath, base: &SPath, prefixes: &[St
 		return true;
 	}
 
-	let Some(rel_path) = path.diff(base.path()) else {
+	let Some(mut rel_path) = path.diff(base.path()) else {
 		return true;
 	};
 
-	let rel_str = rel_path.as_str().trim_start_matches("./");
-	if rel_str.is_empty() {
-		return true;
+	{
+		let rel_str = rel_path.as_str();
+
+		if let Some(stripped) = rel_str.strip_prefix("./") {
+			if stripped.is_empty() {
+				return true;
+			}
+			rel_path = SPath::new(stripped);
+		} else if rel_str.is_empty() {
+			return true;
+		}
 	}
 
 	prefixes.iter().any(|prefix| {
@@ -361,13 +395,20 @@ fn directory_matches_allowed_prefixes(path: &SPath, base: &SPath, prefixes: &[St
 			return true;
 		}
 
-		let rel_spath = SPath::new(rel_str);
 		let prefix_spath = SPath::new(prefix);
 
-		rel_spath.starts_with(&prefix_spath) || prefix_spath.starts_with(&rel_spath)
+		rel_path.starts_with(&prefix_spath) || prefix_spath.starts_with(&rel_path)
 	})
 }
 
+//// Extracts literal directory prefixes from a glob pattern.
+///
+/// # Example
+///
+/// ```text
+/// input: "assets/images/*.png"
+/// output: ["assets", "assets/images"]
+/// ```
 fn glob_literal_prefixes(pattern: &str) -> Vec<String> {
 	let clean = pattern.trim_start_matches("./");
 	if clean.is_empty() {
@@ -429,6 +470,14 @@ fn glob_literal_prefixes(pattern: &str) -> Vec<String> {
 	}
 }
 
+//// Expands a single `{a,b}` brace segment into concrete options.
+///
+/// # Example
+///
+/// ```text
+/// input: "{foo,bar}"
+/// output: Some(["foo", "bar"])
+/// ```
 fn expand_brace_segment(segment: &str) -> Option<Vec<String>> {
 	if segment.starts_with('{') && segment.ends_with('}') {
 		let inner = &segment[1..segment.len() - 1];
@@ -447,16 +496,40 @@ fn expand_brace_segment(segment: &str) -> Option<Vec<String>> {
 	}
 }
 
+//// Reports whether the provided segment contains glob wildcards.
+///
+/// # Example
+///
+/// ```text
+/// input: "src*"
+/// output: true
+/// ```
 fn segment_contains_wildcard(segment: &str) -> bool {
 	segment.contains('*') || segment.contains('?') || segment.contains('[')
 }
 
+//// Appends cloned prefix values into the running list.
+///
+/// # Example
+///
+/// ```text
+/// inputs: target=["a"], values=["b","c"]
+/// result: target=["a","b","c"]
+/// ```
 fn append_adjusted(target: &mut Vec<String>, values: &[String]) {
 	for value in values {
 		target.push(value.to_string());
 	}
 }
 
+//// Normalizes prefix candidates by removing empties and duplicates.
+///
+/// # Example
+///
+/// ```text
+/// input: ["", "a", "a"]
+/// output: []
+/// ```
 fn normalize_prefixes(prefixes: &mut Vec<String>) {
 	if prefixes.is_empty() {
 		return;
@@ -468,3 +541,5 @@ fn normalize_prefixes(prefixes: &mut Vec<String>) {
 	prefixes.sort();
 	prefixes.dedup();
 }
+
+// endregion: --- Support

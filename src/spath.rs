@@ -342,6 +342,23 @@ impl SPath {
 
 	// region:    --- Diff
 
+	/// Returns the relative difference from `base` to this path as an [`SPath`].
+	///
+	/// This delegates to [`pathdiff::diff_utf8_paths`], so it never touches the file system and
+	/// simply subtracts `base` from `self` when `base` is a prefix.
+	/// The returned value preserves the crate-level normalization guarantees and can safely be
+	/// joined back onto `base`.
+	///
+	/// Returns `None` when the inputs cannot be related through a relative path (for example,
+	/// when they reside on different volumes or when normalization prevents a clean prefix match).
+	///
+	/// # Examples
+	/// ```
+	/// # use simple_fs::SPath;
+	/// let base = SPath::new("/workspace/project");
+	/// let file = SPath::new("/workspace/project/src/main.rs");
+	/// assert_eq!(file.diff(&base).map(|p| p.to_string()), Some("src/main.rs".into()));
+	/// ```
 	pub fn diff(&self, base: impl AsRef<Utf8Path>) -> Option<SPath> {
 		let base = base.as_ref();
 
@@ -350,6 +367,18 @@ impl SPath {
 		diff_path.map(SPath::from)
 	}
 
+	/// Returns the relative path from `base` to this path or an [`Error::CannotDiff`].
+	///
+	/// This is a fallible counterpart to [`SPath::diff`]. When the paths share a common prefix it
+	/// returns the diff, otherwise it raises [`Error::CannotDiff`] containing the original inputs,
+	/// making failures descriptive.
+	///
+	/// The computation still delegates to [`pathdiff::diff_utf8_paths`], so no filesystem access
+	/// occurs and the resulting [`SPath`] keeps its normalization guarantees.
+	///
+	/// # Errors
+	/// Returns [`Error::CannotDiff`] when `base` is not a prefix of `self` (for example, when the
+	/// inputs live on different volumes).
 	pub fn try_diff(&self, base: impl AsRef<Utf8Path>) -> Result<SPath> {
 		self.diff(&base).ok_or_else(|| Error::CannotDiff {
 			path: self.to_string(),
