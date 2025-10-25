@@ -226,7 +226,7 @@ struct GlobGroup {
 
 /// Processes the provided globs into groups with collapsed base directories.
 /// For relative globs, the pattern is adjusted to be relative to main_base.
-//// Groups glob patterns by their longest shared base directory.
+/// Groups glob patterns by their longest shared base directory.
 ///
 /// # Example
 ///
@@ -344,7 +344,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 
 /// Given an absolute glob pattern and its computed base, returns the relative glob
 /// by removing the base prefix and any leading path separator.
-//// Rewrites an absolute glob so it becomes relative to `group_base`.
+/// Rewrites an absolute glob so it becomes relative to `group_base`.
 ///
 /// # Example
 ///
@@ -356,7 +356,7 @@ fn relative_from_absolute(glob: &SPath, group_base: &SPath) -> String {
 	glob.diff(group_base).map(|p| p.to_string()).unwrap_or_else(|| glob.to_string())
 }
 
-//// Checks whether a directory path aligns with one of the candidate prefixes.
+/// Checks whether a directory path aligns with one of the candidate prefixes.
 ///
 /// # Example
 ///
@@ -401,7 +401,7 @@ fn directory_matches_allowed_prefixes(path: &SPath, base: &SPath, prefixes: &[St
 	})
 }
 
-//// Extracts literal directory prefixes from a glob pattern.
+/// Extracts literal directory prefixes from a glob pattern.
 ///
 /// # Example
 ///
@@ -470,7 +470,7 @@ fn glob_literal_prefixes(pattern: &str) -> Vec<String> {
 	}
 }
 
-//// Expands a single `{a,b}` brace segment into concrete options.
+/// Expands a single `{a,b}` brace segment into concrete options.
 ///
 /// # Example
 ///
@@ -496,7 +496,7 @@ fn expand_brace_segment(segment: &str) -> Option<Vec<String>> {
 	}
 }
 
-//// Reports whether the provided segment contains glob wildcards.
+/// Reports whether the provided segment contains glob wildcards.
 ///
 /// # Example
 ///
@@ -508,7 +508,7 @@ fn segment_contains_wildcard(segment: &str) -> bool {
 	segment.contains('*') || segment.contains('?') || segment.contains('[')
 }
 
-//// Appends cloned prefix values into the running list.
+/// Appends cloned prefix values into the running list.
 ///
 /// # Example
 ///
@@ -522,7 +522,7 @@ fn append_adjusted(target: &mut Vec<String>, values: &[String]) {
 	}
 }
 
-//// Normalizes prefix candidates by removing empties and duplicates.
+/// Normalizes prefix candidates by removing empties and duplicates.
 ///
 /// # Example
 ///
