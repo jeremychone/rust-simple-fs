@@ -41,6 +41,8 @@ Note: Root crate re-exports most modules, so items are accessible from the crate
   - `SPath::as_std_path(&self) -> &Path`
 
 - Getters
+  - `SPath::to_str(&self) -> &str` (deprecated)
+  
   - `SPath::as_str(&self) -> &str`
   
   - `SPath::file_name(&self) -> Option<&str>`
@@ -167,6 +169,8 @@ Note: Root crate re-exports most modules, so items are accessible from the crate
   - `SFile::as_std_path(&self) -> &Path`
 
 - Getters
+  - `SFile::to_str(&self) -> &str` (deprecated)
+  
   - `SFile::as_str(&self) -> &str`
   
   - `SFile::file_name(&self) -> Option<&str>`
