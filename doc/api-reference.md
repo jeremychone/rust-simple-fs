@@ -2,6 +2,12 @@
 
 Note: Root crate re-exports most modules, so items are accessible from the crate root unless noted.
 
+```toml
+simple-fs = "0.9.0"
+# or with features
+simple-fs = {version = "0.9.0", features = ["with-json", "with-toml", "bin-nums"]}
+# or `features = ["full"]
+```
 
 ## Core
 
