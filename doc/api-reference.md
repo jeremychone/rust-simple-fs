@@ -3,9 +3,9 @@
 Note: Root crate re-exports most modules, so items are accessible from the crate root unless noted.
 
 ```toml
-simple-fs = "0.9.0"
+simple-fs = "0.9.1"
 # or with features
-simple-fs = {version = "0.9.0", features = ["with-json", "with-toml", "bin-nums"]}
+simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"]}
 # or `features = ["full"]
 ```
 
@@ -339,6 +339,18 @@ simple-fs = {version = "0.9.0", features = ["with-json", "with-toml", "bin-nums"
   - `try_into_collapsed(path: impl Into<Utf8PathBuf>) -> Option<Utf8PathBuf>`
   
   - `is_collapsed(path: impl AsRef<Utf8Path>) -> bool`
+
+
+## Safer Remove
+
+- Function: `safer_remove_dir(dir_path: &SPath, options: impl Into<SaferRemoveOptions<'a>>) -> Result<bool>`
+- Function: `safer_remove_file(file_path: &SPath, options: impl Into<SaferRemoveOptions<'a>>) -> Result<bool>`
+
+- Type: `SaferRemoveOptions<'a>`
+  - `SaferRemoveOptions::default()` (which defaults `restrict_to_current_dir` to `true`)
+  - `SaferRemoveOptions::with_must_contain_any(self, patterns: &'a [&'a str]) -> Self`
+  - `SaferRemoveOptions::with_must_contain_all(self, patterns: &'a [&'a str]) -> Self`
+  - `SaferRemoveOptions::with_restrict_to_current_dir(self, val: bool) -> Self`
 
 
 ## Common
