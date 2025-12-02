@@ -33,6 +33,12 @@ pub enum Error {
 	#[display("File path has no parent directory: '{_0}'")]
 	FileHasNoParent(String),
 
+	// -- Remove
+	#[display("File not safe to remove.\nPath: '{}'\nCause: {}", _0.path, _0.cause)]
+	FileNotSafeToRemove(PathAndCause),
+	#[display("Directory not safe to remove.\nPath: '{}'\nCause: {}", _0.path, _0.cause)]
+	DirNotSafeToRemove(PathAndCause),
+
 	// -- Sort
 	#[display("Cannot sort by globs.\nCause: {cause}")]
 	SortByGlobs {
@@ -142,8 +148,8 @@ pub enum Cause {
 
 #[derive(Debug)]
 pub struct PathAndCause {
-	path: String,
-	cause: Cause,
+	pub path: String,
+	pub cause: Cause,
 }
 
 // endregion: --- Cause Types
