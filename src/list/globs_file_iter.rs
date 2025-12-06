@@ -297,7 +297,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 					};
 					existing_group.patterns.push(new_pat.clone());
 				}
-				
+
 				// Recalculate prefixes for the merged pattern set
 				let mut new_prefixes = Vec::new();
 				let mut full_traversal_needed = false;
@@ -320,24 +320,28 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 				merged = true;
 				break;
 			} else if base.starts_with(&existing_group.base) {
-				// 'existing_base' is a prefix of 'base'
-				let diff = existing_group.base.diff(&base).map(|p| p.to_string()).unwrap_or_default();
-				let mut new_patterns = patterns.clone();
+				// 'existing_base' is a prefix of 'base'. Keep existing_group.base as it is the broader base.
+				// Example: existing_group.base = /a, base = /a/b.
 
-				// Adjust and merge existing patterns (which were relative to the shorter base)
-				for pat in existing_group.patterns.iter() {
-					let new_pat = if diff.is_empty() {
+				// 1. Calculate path segment from existing_group.base to base (e.g., 'b').
+				// This segment is used to adjust incoming patterns (relative to 'base') to be relative to 'existing_group.base'.
+				let diff_segment = base.diff(&existing_group.base).map(|p| p.to_string()).unwrap_or_default();
+
+				// 2. Adjust incoming patterns and merge them into existing_group.patterns.
+				for pat in patterns.iter() {
+					let new_pat = if diff_segment.is_empty() {
 						pat.clone()
 					} else {
-						SPath::new(&diff).join(pat).to_string()
+						SPath::new(&diff_segment).join(pat).to_string()
 					};
-					new_patterns.push(new_pat.clone());
+					existing_group.patterns.push(new_pat);
 				}
 
-				// Recalculate prefixes for all new patterns (incoming + adjusted existing)
+				// 3. Recalculate prefixes for the combined pattern set (existing + newly merged patterns).
 				let mut new_prefixes = Vec::new();
 				let mut full_traversal_needed = false;
-				for pat in new_patterns.iter() {
+
+				for pat in existing_group.patterns.iter() {
 					let pfx = glob_literal_prefixes(pat);
 					if pfx.is_empty() {
 						full_traversal_needed = true;
@@ -346,9 +350,7 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 					append_adjusted(&mut new_prefixes, &pfx);
 				}
 
-				existing_group.base = base.clone();
-				existing_group.patterns = new_patterns;
-				
+				// 4. Update prefixes (base remains unchanged).
 				if full_traversal_needed {
 					existing_group.prefixes.clear();
 				} else {
