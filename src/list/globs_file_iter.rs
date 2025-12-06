@@ -296,18 +296,35 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 						SPath::new(&diff).join(pat).to_string()
 					};
 					existing_group.patterns.push(new_pat.clone());
-					append_adjusted(&mut existing_group.prefixes, &glob_literal_prefixes(&new_pat));
 				}
+				
+				// Recalculate prefixes for the merged pattern set
+				let mut new_prefixes = Vec::new();
+				let mut full_traversal_needed = false;
+				for pat in existing_group.patterns.iter() {
+					let pfx = glob_literal_prefixes(pat);
+					if pfx.is_empty() {
+						full_traversal_needed = true;
+						break;
+					}
+					append_adjusted(&mut new_prefixes, &pfx);
+				}
+
+				if full_traversal_needed {
+					existing_group.prefixes.clear();
+				} else {
+					normalize_prefixes(&mut new_prefixes);
+					existing_group.prefixes = new_prefixes;
+				}
+
 				merged = true;
 				break;
 			} else if base.starts_with(&existing_group.base) {
-				// 'existing_base' is a subdirectory of 'base'
+				// 'existing_base' is a prefix of 'base'
 				let diff = existing_group.base.diff(&base).map(|p| p.to_string()).unwrap_or_default();
 				let mut new_patterns = patterns.clone();
-				let mut new_prefixes = Vec::new();
-				for pat in patterns.iter() {
-					append_adjusted(&mut new_prefixes, &glob_literal_prefixes(pat));
-				}
+
+				// Adjust and merge existing patterns (which were relative to the shorter base)
 				for pat in existing_group.patterns.iter() {
 					let new_pat = if diff.is_empty() {
 						pat.clone()
@@ -315,22 +332,53 @@ fn process_globs(main_base: &SPath, globs: &[&str]) -> Result<Vec<GlobGroup>> {
 						SPath::new(&diff).join(pat).to_string()
 					};
 					new_patterns.push(new_pat.clone());
-					append_adjusted(&mut new_prefixes, &glob_literal_prefixes(&new_pat));
 				}
+
+				// Recalculate prefixes for all new patterns (incoming + adjusted existing)
+				let mut new_prefixes = Vec::new();
+				let mut full_traversal_needed = false;
+				for pat in new_patterns.iter() {
+					let pfx = glob_literal_prefixes(pat);
+					if pfx.is_empty() {
+						full_traversal_needed = true;
+						break;
+					}
+					append_adjusted(&mut new_prefixes, &pfx);
+				}
+
 				existing_group.base = base.clone();
 				existing_group.patterns = new_patterns;
-				normalize_prefixes(&mut new_prefixes);
-				existing_group.prefixes = new_prefixes;
+				
+				if full_traversal_needed {
+					existing_group.prefixes.clear();
+				} else {
+					normalize_prefixes(&mut new_prefixes);
+					existing_group.prefixes = new_prefixes;
+				}
+
 				merged = true;
 				break;
 			}
 		}
 		if !merged {
 			let mut prefixes = Vec::new();
+			let mut full_traversal_needed = false;
+
 			for pat in patterns.iter() {
-				append_adjusted(&mut prefixes, &glob_literal_prefixes(pat));
+				let pfx = glob_literal_prefixes(pat);
+				if pfx.is_empty() {
+					full_traversal_needed = true;
+					break;
+				}
+				append_adjusted(&mut prefixes, &pfx);
 			}
-			normalize_prefixes(&mut prefixes);
+
+			if full_traversal_needed {
+				prefixes.clear();
+			} else {
+				normalize_prefixes(&mut prefixes);
+			}
+
 			final_groups.push(GlobGroup {
 				base,
 				patterns,

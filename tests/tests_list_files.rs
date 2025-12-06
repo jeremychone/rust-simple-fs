@@ -411,6 +411,32 @@ fn test_list_files_relative_negative_glob() -> Result<()> {
 }
 
 #[test]
+fn test_list_files_with_nonexistent_folder_glob_relative() -> Result<()> {
+	// -- Exec
+	// Mix a glob for a non-existent folder with a valid glob using relative_glob option
+	let res = list_files(
+		"./tests-data/",
+		Some(&["nonexistent-folder/**/*.rs", "./**/*.md"]),
+		Some(ListOptions::from_relative_glob(true)),
+	)?;
+
+	// -- Check
+	let res_paths = res.iter().map(|p| p.as_str()).collect::<Vec<_>>();
+	assert_eq!(
+		res.len(),
+		7,
+		"Should have 7 markdown files despite non-existent folder glob"
+	);
+	assert!(res_paths.contains(&"./tests-data/file1.md"), "Should contain file1.md");
+	assert!(
+		res_paths.contains(&"./tests-data/dir1/file3.md"),
+		"Should contain dir1/file3.md"
+	);
+
+	Ok(())
+}
+
+#[test]
 fn test_list_files_with_combined_exclusion_methods() -> Result<()> {
 	// -- Exec
 	// Combine both ListOptions exclude_globs and negative patterns in include_globs
