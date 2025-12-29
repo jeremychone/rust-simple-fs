@@ -18,10 +18,10 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 ## Paths (SPath)
 
-- Type: `SPath` (UTF-8, normalized posix-style path)
+- Type: `SPath` (UTF-8, normalized posix-style path, `/` separators)
 
 - Constructors
-  - `SPath::new(path: impl Into<Utf8PathBuf>) -> SPath`
+  - `SPath::new(path: impl Into<Utf8PathBuf>) -> SPath` (always normalizes)
   
   - `SPath::from_std_path_buf(path_buf: PathBuf) -> Result<SPath>`
   
@@ -146,7 +146,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 ## Files (SFile)
 
-- Type: `SFile` (valid UTF-8 path guaranteed to be an existing file)
+- Type: `SFile` (Guaranteed: UTF-8, normalized, and existing file)
 
 - Constructors
   - `SFile::new(path: impl Into<Utf8PathBuf>) -> Result<SFile>`
@@ -300,6 +300,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 - Options
   - `ListOptions<'a> { exclude_globs: Option<Vec<&'a str>>, relative_glob: bool, depth: Option<usize> }`
+  - Defaults: `relative_glob: false`, `exclude_globs: None` (but `iter_files` applies `DEFAULT_EXCLUDE_GLOBS` if `None`)
   
   - `ListOptions::new(globs: Option<&'a [&'a str]>) -> ListOptions<'a>`
   
@@ -345,17 +346,17 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 - Function: `safer_remove_dir(dir_path: &SPath, options: impl Into<SaferRemoveOptions<'a>>) -> Result<bool>`
 - Function: `safer_remove_file(file_path: &SPath, options: impl Into<SaferRemoveOptions<'a>>) -> Result<bool>`
+- Note: `options` cannot be `None`. Use `SaferRemoveOptions::default()` or `()` for default safety.
 
 - Type: `SaferRemoveOptions<'a>`
-  - `SaferRemoveOptions::default()` (which defaults `restrict_to_current_dir` to `true`)
+  - `SaferRemoveOptions::default()`: `restrict_to_current_dir: true` (path must be below CWD), others `None`.
   - `SaferRemoveOptions::with_must_contain_any(self, patterns: &'a [&'a str]) -> Self`
   - `SaferRemoveOptions::with_must_contain_all(self, patterns: &'a [&'a str]) -> Self`
   - `SaferRemoveOptions::with_restrict_to_current_dir(self, val: bool) -> Self`
 
-
 ## Common
 
-- Pretty size
+- Pretty size (Fixed width 9 chars, right aligned number, unit aligned)
   - `struct PrettySizeOptions { lowest_unit: SizeUnit }`
   
   - `enum SizeUnit { B, KB, MB, GB, TB }`
@@ -372,7 +373,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 ## Watch
 
-- `watch(path: impl AsRef<Path>) -> Result<SWatcher>`
+- `watch(path: impl AsRef<Path>) -> Result<SWatcher>` (Debounced: ~200ms)
 
 - `struct SWatcher { rx: flume::Receiver<Vec<SEvent>>, /* keeps internal debouncer alive */ }`
 
