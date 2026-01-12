@@ -1,6 +1,6 @@
 use crate::SPath;
 use crate::error::{Cause, PathAndCause};
-use crate::safer_remove::SaferRemoveOptions;
+use crate::safer::SaferRemoveOptions;
 use crate::{Error, Result};
 use std::fs;
 
