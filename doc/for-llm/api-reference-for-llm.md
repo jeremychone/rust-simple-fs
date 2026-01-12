@@ -354,6 +354,22 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `SaferRemoveOptions::with_must_contain_all(self, patterns: &'a [&'a str]) -> Self`
   - `SaferRemoveOptions::with_restrict_to_current_dir(self, val: bool) -> Self`
 
+
+## Safer Trash
+
+- Function: `safer_trash_dir(dir_path: &SPath, options: impl Into<SaferTrashOptions<'a>>) -> Result<bool>`
+
+- Function: `safer_trash_file(file_path: &SPath, options: impl Into<SaferTrashOptions<'a>>) -> Result<bool>`
+
+- Note: `options` cannot be `None`. Use `SaferTrashOptions::default()` or `()` for default safety.
+
+- Type: `SaferTrashOptions<'a>`
+  - `SaferTrashOptions::default()`: `restrict_to_current_dir: true` (path must be below CWD), others `None`.
+  - `SaferTrashOptions::with_must_contain_any(self, patterns: &'a [&'a str]) -> Self`
+  - `SaferTrashOptions::with_must_contain_all(self, patterns: &'a [&'a str]) -> Self`
+  - `SaferTrashOptions::with_restrict_to_current_dir(self, val: bool) -> Self`
+
+
 ## Common
 
 - Pretty size (Fixed width 9 chars, right aligned number, unit aligned)
