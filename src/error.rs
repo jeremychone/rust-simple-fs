@@ -39,6 +39,14 @@ pub enum Error {
 	#[display("Directory not safe to remove.\nPath: '{}'\nCause: {}", _0.path, _0.cause)]
 	DirNotSafeToRemove(PathAndCause),
 
+	// -- Trash
+	#[display("File not safe to trash.\nPath: '{}'\nCause: {}", _0.path, _0.cause)]
+	FileNotSafeToTrash(PathAndCause),
+	#[display("Directory not safe to trash.\nPath: '{}'\nCause: {}", _0.path, _0.cause)]
+	DirNotSafeToTrash(PathAndCause),
+	#[display("Cannot trash path '{}'\nCause: {}", _0.path, _0.cause)]
+	CantTrash(PathAndCause),
+
 	// -- Sort
 	#[display("Cannot sort by globs.\nCause: {cause}")]
 	SortByGlobs {
