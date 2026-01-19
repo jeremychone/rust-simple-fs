@@ -12,14 +12,12 @@ The main construct of `simple-fs` is the `SPath` structure, which contains a `Ut
 - Posix normalizes the path, meaning only `/` (no `\`), and redundant `//` or `/./` are collapsed to a single `./`.
 - It does not have any `\\?\` on Windows.
 
-The `SFile` is a File struct that contains an `SPath`.
-
-By applying the above rules, path/file APIs can be drastically simplified, and both structs offer many Path functions, with `&str` as the return type.
+By applying the above rules, path/file APIs can be drastically simplified, and `SPath` offers many Path functions, with `&str` as the return type.
 
 This crate also offers a simple and scalable way to list or iterate on files, given a glob:
 
-- `iter_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<impl Iter SFile>`
-- `list_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<Vec<SFile>>`
+- `iter_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<impl Iterator<Item = SPath>>`
+- `list_files(dir, include_globs: Option<&[&str]>, list_options: Option<ListOptions>) -> Result<Vec<SPath>>`
 - `ensure_dir(dir_path)` makes sure all the directory paths are created.
 - `ensure_file_dir(file_path)` makes sure the file directory exists.
 
@@ -46,6 +44,7 @@ Happy coding!
 
 ## Notable Changes
 
+- `0.10.0` No more `SFile` (SPath for all, SFile was a left-over from early design. Did not provide real value, just code/API duplication)
 - `0.9.0-alpha.x` Same API (for now), but new optimized `list_files(...)` (hence the large version jump)
 - `0.8.x` Removed 'target/' and 'node_modules/' from the default excludes (too presumptive)
 - `0.7.x` `SMeta.size` is now `u64` (changed from `i64`), new APIs
