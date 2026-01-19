@@ -372,6 +372,8 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 ## Common
 
+- `home_dir() -> Result<SPath>`
+
 - Pretty size (Fixed width 9 chars, right aligned number, unit aligned)
   - `struct PrettySizeOptions { lowest_unit: SizeUnit }`
   

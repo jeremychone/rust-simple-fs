@@ -11,6 +11,8 @@ pub enum Error {
 	// -- Path
 	#[display("Path is not valid UTF-8: '{_0}'")]
 	PathNotUtf8(String),
+	#[display("Home directory not found")]
+	HomeDirNotFound,
 	#[display("Path has no file name: '{_0}'")]
 	PathHasNoFileName(String),
 	#[display("Strip Prefix fail. Path '{path}' does not a base of '{prefix}'")]
