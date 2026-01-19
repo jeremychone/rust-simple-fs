@@ -611,6 +611,12 @@ impl From<SPath> for Utf8PathBuf {
 
 // region:    --- Froms
 
+impl From<&SPath> for SPath {
+	fn from(path: &SPath) -> Self {
+		path.clone()
+	}
+}
+
 impl From<Utf8PathBuf> for SPath {
 	fn from(path_buf: Utf8PathBuf) -> Self {
 		SPath::new(path_buf)
