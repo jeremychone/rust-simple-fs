@@ -1,12 +1,12 @@
 use super::glob::{DEFAULT_EXCLUDE_GLOBS, get_glob_set, longest_base_path_wild_free};
-use crate::{ListOptions, Result, SFile, SPath, get_depth};
+use crate::{ListOptions, Result, SPath, get_depth};
 use std::collections::HashSet;
 use std::path::Path;
 use std::sync::Arc;
 use walkdir::WalkDir;
 
 pub struct GlobsFileIter {
-	inner: Box<dyn Iterator<Item = SFile>>,
+	inner: Box<dyn Iterator<Item = SPath>>,
 }
 
 impl GlobsFileIter {
@@ -90,7 +90,7 @@ impl GlobsFileIter {
 			.transpose()?;
 
 		// For each group, create a WalkDir iterator with its own base and globset
-		let mut group_iterators: Vec<Box<dyn Iterator<Item = SFile>>> = Vec::new();
+		let mut group_iterators: Vec<Box<dyn Iterator<Item = SPath>>> = Vec::new();
 
 		let max_depth = list_options.and_then(|o| o.depth);
 
@@ -152,7 +152,7 @@ impl GlobsFileIter {
 				})
 				.filter_map(|entry| entry.ok())
 				.filter(|entry| entry.file_type().is_file())
-				.filter_map(SFile::from_walkdir_entry_ok);
+				.filter_map(SPath::from_walkdir_entry_ok);
 
 			let exclude_globs_set_clone = exclude_globs_set.clone();
 			let main_base_clone = main_base.clone();
@@ -187,14 +187,14 @@ impl GlobsFileIter {
 
 		// Combine all group iterators into one combined iterator
 		let combined_iter = group_iterators.into_iter().fold(
-			Box::new(std::iter::empty()) as Box<dyn Iterator<Item = SFile>>,
-			|acc, iter| Box::new(acc.chain(iter)) as Box<dyn Iterator<Item = SFile>>,
+			Box::new(std::iter::empty()) as Box<dyn Iterator<Item = SPath>>,
+			|acc, iter| Box::new(acc.chain(iter)) as Box<dyn Iterator<Item = SPath>>,
 		);
 
 		// Use scan to keep track of absolute file paths and remove duplicates.
 		let dedup_iter = combined_iter
 			.scan(HashSet::<SPath>::new(), |seen, file| {
-				let path = file.path().clone();
+				let path = file.clone();
 				if seen.insert(path) {
 					Some(Some(file))
 				} else {
@@ -210,7 +210,7 @@ impl GlobsFileIter {
 }
 
 impl Iterator for GlobsFileIter {
-	type Item = SFile;
+	type Item = SPath;
 	fn next(&mut self) -> Option<Self::Item> {
 		self.inner.next()
 	}

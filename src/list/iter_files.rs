@@ -1,4 +1,4 @@
-use crate::{ListOptions, Result, SFile};
+use crate::{ListOptions, Result, SPath};
 use std::path::Path;
 
 pub fn iter_files(
@@ -13,7 +13,7 @@ pub fn list_files(
 	dir: impl AsRef<Path>,
 	include_globs: Option<&[&str]>,
 	list_options: Option<ListOptions<'_>>,
-) -> Result<Vec<SFile>> {
+) -> Result<Vec<SPath>> {
 	let sfiles_iter = iter_files(dir, include_globs, list_options)?;
 	Ok(sfiles_iter.collect())
 }

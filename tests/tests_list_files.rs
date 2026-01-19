@@ -1,4 +1,4 @@
-use simple_fs::{ListOptions, SFile, SPath, iter_files, list_files};
+use simple_fs::{ListOptions,SPath, iter_files, list_files};
 
 pub type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -238,7 +238,7 @@ fn test_list_files_mixed_absolute_and_relative_globs_with_relative_option() -> R
 fn test_list_iter_files_simple_glob_ok() -> Result<()> {
 	// -- Exec
 	let iter = iter_files("./tests-data/", Some(&["./tests-data/*.md"]), None)?;
-	let res: Vec<SFile> = iter.collect();
+	let res: Vec<SPath> = iter.collect();
 
 	// -- Check
 	let count = res.len();
