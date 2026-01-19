@@ -23,7 +23,7 @@ where
 	}
 
 	items.sort_by(|a, b| {
-		// Get paths from either SFile or SPath via AsRef<SPath>.
+		// Get paths from either SPath via AsRef<SPath>.
 		let ap: &SPath = a.as_ref();
 		let bp: &SPath = b.as_ref();
 
