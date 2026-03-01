@@ -4,17 +4,50 @@ use globset::{Glob, GlobMatcher};
 
 use crate::{Error, Result, SPath};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SortByGlobsOptions {
+	pub end_weighted: bool,
+	pub no_match_position: NoMatchPosition,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoMatchPosition {
+	Start,
+	#[default]
+	End,
+}
+
+impl Default for SortByGlobsOptions {
+	fn default() -> Self {
+		Self {
+			end_weighted: false,
+			no_match_position: NoMatchPosition::End,
+		}
+	}
+}
+
+impl From<bool> for SortByGlobsOptions {
+	fn from(end_weighted: bool) -> Self {
+		Self {
+			end_weighted,
+			..Default::default()
+		}
+	}
+}
+
 /// Sort files by glob priority, then by full path.
 ///
 /// - Builds a Vec of Glob (no GlobSet).
 /// - The "glob index" used for ordering is chosen as:
 ///   - end_weighted = false: first matching glob index (from the beginning).
 ///   - end_weighted = true: last matching glob index (from the end).
-/// - Files are ordered by (glob_index, full_path). Non-matches get `usize::MAX`.
-pub fn sort_by_globs<T>(mut items: Vec<T>, globs: &[&str], end_weighted: bool) -> Result<Vec<T>>
+/// - Files are ordered by (glob_index, full_path). Non-matches are preserved in their original order.
+pub fn sort_by_globs<T>(items: Vec<T>, globs: &[&str], options: impl Into<SortByGlobsOptions>) -> Result<Vec<T>>
 where
 	T: AsRef<SPath>,
 {
+	let options = options.into();
+
 	// Build individual Glob matchers in order.
 	let mut matchers: Vec<(usize, GlobMatcher)> = Vec::with_capacity(globs.len());
 	for (idx, pat) in globs.iter().enumerate() {
@@ -22,26 +55,49 @@ where
 		matchers.push((idx, gm));
 	}
 
-	items.sort_by(|a, b| {
-		// Get paths from either SPath via AsRef<SPath>.
-		let ap: &SPath = a.as_ref();
-		let bp: &SPath = b.as_ref();
+	let mut matched = Vec::with_capacity(items.len());
+	let mut unmatched = Vec::with_capacity(items.len());
 
-		let ai = match_index_for_path(ap, &matchers, end_weighted);
-		let bi = match_index_for_path(bp, &matchers, end_weighted);
+	for (orig_idx, item) in items.into_iter().enumerate() {
+		let glob_idx = match_index_for_path(item.as_ref(), &matchers, options.end_weighted);
+		if glob_idx == usize::MAX {
+			unmatched.push(item);
+		} else {
+			matched.push((glob_idx, orig_idx, item));
+		}
+	}
 
-		match ai.cmp(&bi) {
+	// Sort matched.
+	matched.sort_by(|(ai, a_orig, a_item), (bi, b_orig, b_item)| {
+		match ai.cmp(bi) {
 			Ordering::Equal => {
 				// Tiebreaker: by full path from SPath.
-				let an = ap.as_str();
-				let bn = bp.as_str();
-				an.cmp(bn)
+				let an = a_item.as_ref().as_str();
+				let bn = b_item.as_ref().as_str();
+				match an.cmp(bn) {
+					Ordering::Equal => a_orig.cmp(b_orig),
+					other => other,
+				}
 			}
 			other => other,
 		}
 	});
 
-	Ok(items)
+	let matched: Vec<T> = matched.into_iter().map(|(_, _, item)| item).collect();
+
+	let mut res = Vec::with_capacity(matched.len() + unmatched.len());
+	match options.no_match_position {
+		NoMatchPosition::Start => {
+			res.extend(unmatched);
+			res.extend(matched);
+		}
+		NoMatchPosition::End => {
+			res.extend(matched);
+			res.extend(unmatched);
+		}
+	}
+
+	Ok(res)
 }
 
 // region:    --- Support
