@@ -212,7 +212,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `get_depth(patterns: &[&str], depth: Option<usize>) -> usize`
 
 - Sorting
-  - `sort_by_globs<T>(items: Vec<T>, globs: &[&str], end_weighted: bool) -> Result<Vec<T>> where T: AsRef<SPath>`
+  - `sort_by_globs<T>(items: Vec<T>, globs: &[&str], end_weighted: bool) -> Result<Vec<T>> where T: AsRef<SPath>` (Sorts by glob priority index, then by full path. `end_weighted=true` uses the last matching glob index, `false` uses the first. Strips `./` prefix for matching. Non-matches are placed at the end.)
 
 
 ## Reshape / Normalize
