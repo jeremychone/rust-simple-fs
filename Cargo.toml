@@ -1,6 +1,6 @@
 [package]
 name = "simple-fs"
-version = "0.11.0-alpha.2-WIP"
+version = "0.11.0"
 edition = "2024"
 authors = ["Jeremy Chone <jeremy.chone@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -32,7 +32,7 @@ pathdiff = { version = "0.2.2", features = ["camino"]}
 walkdir = "2"
 globset = "0.4"
 notify = "8"
-notify-debouncer-full = "0.6"
+notify-debouncer-full = "0.7"
 trash = "5.2.5"
 mime_guess = "2.0.5"
 # -- Feature: json, toml
@@ -40,11 +40,11 @@ serde = { version = "1", features = ["derive"], optional = true}
 # -- Feature: json
 serde_json = { version = "1", optional = true}
 # -- Feature: toml
-toml = { version = "0.9", optional = true}
+toml = { version = "1", optional = true}
 # -- Features: bin-nums
 byteorder = { version = "1.5", optional = true}
 path-clean = "1.0.1"
 # -- Other
 derive_more = {version = "2.0", features = ["from", "display"] }
-flume = "0.11.1"
+flume = "0.12"
 memchr = "2"
