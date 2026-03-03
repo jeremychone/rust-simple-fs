@@ -75,6 +75,10 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   
   - `SPath::is_relative(&self) -> bool`
 
+  - `SPath::mime_type(&self) -> Option<&'static str>`
+
+  - `SPath::is_likely_text(&self) -> bool`
+
 - Metadata
   - `SPath::meta(&self) -> Result<SMeta>`
   
