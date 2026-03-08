@@ -46,6 +46,13 @@ impl SPath {
 		Ok(SPath::new(path_buf))
 	}
 
+	/// Constructor from fs::DirEntry.
+	pub fn from_fs_entry(fs_entry: fs::DirEntry) -> Result<Self> {
+		let path = fs_entry.path();
+		let path_buf = validate_spath_for_result(path)?;
+		Ok(SPath::new(path_buf))
+	}
+
 	/// Constructor for anything that implements AsRef<Path>.
 	///
 	/// Returns Option<SPath>. Useful for filter_map.
@@ -517,10 +524,10 @@ impl SPath {
 	/// # Errors
 	///
 	/// If `base` is not a prefix of `self`
-	pub fn strip_prefix(&self, prefix: impl AsRef<Path>) -> Result<SPath> {
+	pub fn strip_prefix(&self, prefix: impl AsRef<str>) -> Result<SPath> {
 		let prefix = prefix.as_ref();
 		let new_path = self.path_buf.strip_prefix(prefix).map_err(|_| Error::StripPrefix {
-			prefix: prefix.to_string_lossy().to_string(),
+			prefix: prefix.to_string(),
 			path: self.to_string(),
 		})?;
 
@@ -551,6 +558,10 @@ impl SPath {
 	/// ```
 	pub fn starts_with(&self, base: impl AsRef<Path>) -> bool {
 		self.path_buf.starts_with(base)
+	}
+
+	pub fn starts_with_prefix(&self, base: impl AsRef<str>) -> bool {
+		self.path_buf.starts_with(base.as_ref())
 	}
 }
 
