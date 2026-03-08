@@ -3,9 +3,9 @@
 Note: Root crate re-exports most modules, so items are accessible from the crate root unless noted.
 
 ```toml
-simple-fs = "0.9.1"
+simple-fs = "0.12.0-beta.1"
 # or with features
-simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"]}
+simple-fs = {version = "0.12.0-beta.1", features = ["with-json", "with-toml", "bin-nums"]}
 # or `features = ["full"]
 ```
 
@@ -22,10 +22,14 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
 
 - Constructors
   - `SPath::new(path: impl Into<Utf8PathBuf>) -> SPath` (always normalizes)
+    - since: `0.12.0`
   
   - `SPath::from_std_path_buf(path_buf: PathBuf) -> Result<SPath>`
   
   - `SPath::from_std_path(path: impl AsRef<Path>) -> Result<SPath>`
+  
+  - `SPath::from_fs_entry(fs_entry: fs::DirEntry) -> Result<SPath>`
+    - since: `0.12.0`
   
   - `SPath::from_walkdir_entry(wd_entry: walkdir::DirEntry) -> Result<SPath>`
   
@@ -83,10 +87,6 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `SPath::meta(&self) -> Result<SMeta>`
   
   - `SPath::metadata(&self) -> Result<Metadata>`
-  
-  - `SPath::modified(&self) -> Result<SystemTime>` (deprecated)
-  
-  - `SPath::modified_us(&self) -> Result<i64>` (deprecated)
 
 - Transformers
   - `SPath::canonicalize(&self) -> Result<SPath>`
@@ -128,7 +128,8 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `SPath::append_extension(&self, ext: &str) -> SPath`
 
 - Other
-  - `SPath::strip_prefix(&self, prefix: impl AsRef<Path>) -> Result<SPath>`
+  - `SPath::strip_prefix(&self, prefix: impl AsRef<str>) -> Result<SPath>`
+    - since: `0.12.0` (API changed from `AsRef<Path>`)
   
   - `SPath::starts_with(&self, base: impl AsRef<Path>) -> bool`
   
@@ -229,6 +230,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `needs_normalize(path: &Utf8Path) -> bool`
   
   - `into_normalized(path: Utf8PathBuf) -> Utf8PathBuf`
+    - Note: Handles separator normalization and redundant `./` cleanup, this does not collapse `..`.
 
 - Collapser
   - `into_collapsed(path: impl Into<Utf8PathBuf>) -> Utf8PathBuf`
@@ -236,6 +238,7 @@ simple-fs = {version = "0.9.1", features = ["with-json", "with-toml", "bin-nums"
   - `try_into_collapsed(path: impl Into<Utf8PathBuf>) -> Option<Utf8PathBuf>`
   
   - `is_collapsed(path: impl AsRef<Utf8Path>) -> bool`
+  - Note: Collapsing `..` is explicit through collapser APIs, `SPath::new` does not implicitly collapse `..`.
 
 
 ## Safer Remove
