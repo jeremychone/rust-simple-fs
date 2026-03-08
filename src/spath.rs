@@ -4,12 +4,13 @@ use core::fmt;
 use pathdiff::diff_utf8_paths;
 use std::fs::{self, Metadata};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 
 /// An SPath is a posix normalized Path using camino Utf8PathBuf as strogate.
 /// It can be constructed from a String, Path, io::DirEntry, or walkdir::DirEntry
 ///
 /// - It's Posix normalized `/`, all redundant `//` and `/./` are removed
+/// - It does not collapse `..` segments by default, use collapse APIs for that
 /// - Garanteed to be UTF8
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct SPath {
@@ -19,7 +20,8 @@ pub struct SPath {
 /// Constructors that guarantee the SPath contract described in the struct
 impl SPath {
 	/// Constructor for SPath accepting anything that implements Into<Utf8PathBuf>.
-	/// IMPORTANT: This will normalize the path (posix style
+	/// IMPORTANT: This will normalize the path (posix style), but does not collapse `..`
+	/// segments. Use collapse APIs when collapse behavior is desired.
 	pub fn new(path: impl Into<Utf8PathBuf>) -> Self {
 		let path_buf = path.into();
 		let path_buf = reshape::into_normalized(path_buf);
@@ -105,15 +107,6 @@ impl SPath {
 
 /// Public getters
 impl SPath {
-	/// Returns the &str of the path.
-	///
-	/// NOTE: We know that this must be Some() since the SPath constructor guarantees that
-	///       the path.as_str() is valid.
-	#[deprecated(note = "use as_str()")]
-	pub fn to_str(&self) -> &str {
-		self.path_buf.as_str()
-	}
-
 	/// Returns the &str of the path.
 	pub fn as_str(&self) -> &str {
 		self.path_buf.as_str()
@@ -314,25 +307,6 @@ impl SPath {
 		fs::metadata(self).map_err(|ex| Error::CantGetMetadata((self, ex).into()))
 	}
 
-	/// Returns the path.metadata modified SystemTime
-	///
-	#[deprecated = "use spath.meta()"]
-	pub fn modified(&self) -> Result<SystemTime> {
-		let path = self.std_path();
-		let metadata = fs::metadata(path).map_err(|ex| Error::CantGetMetadata((path, ex).into()))?;
-		let last_modified = metadata
-			.modified()
-			.map_err(|ex| Error::CantGetMetadataModified((path, ex).into()))?;
-		Ok(last_modified)
-	}
-
-	/// Returns the epoch duration in microseconds.
-	/// Note: The maximum UTC date would be approximately `2262-04-11`.
-	///       Thus, for all intents and purposes, it is far enough to not worry.
-	#[deprecated = "use spath.meta()"]
-	pub fn modified_us(&self) -> Result<i64> {
-		Ok(self.meta()?.modified_epoch_us)
-	}
 }
 
 /// Transformers
