@@ -230,7 +230,6 @@ impl SPath {
 
 		// -- Get the mime type and return if found
 		let mimes = mime_guess::from_path(self.path());
-		println!("->> {self} {mimes:?}");
 		if mimes.is_empty() {
 			return true;
 		}
