@@ -213,14 +213,15 @@ impl SPath {
 						| "sass" | "less" | "js"
 						| "mjs" | "cjs" | "ts"
 						| "tsx" | "jsx" | "rs"
-						| "py" | "rb" | "go"
-						| "java" | "c" | "cpp"
-						| "h" | "hpp" | "sh"
-						| "bash" | "zsh" | "fish"
-						| "php" | "lua" | "ini"
-						| "cfg" | "conf" | "sql"
-						| "graphql" | "gql"
-						| "svg" | "log" | "env"
+						| "dart" | "py" | "rb"
+						| "go" | "java" | "c"
+						| "cpp" | "h" | "hpp"
+						| "sh" | "bash" | "zsh"
+						| "fish" | "php" | "lua"
+						| "ini" | "cfg" | "conf"
+						| "sql" | "graphql"
+						| "gql" | "svg" | "log"
+						| "env" | "tex"
 				);
 			if known_text_ext {
 				return true;
@@ -229,6 +230,7 @@ impl SPath {
 
 		// -- Get the mime type and return if found
 		let mimes = mime_guess::from_path(self.path());
+		println!("->> {self} {mimes:?}");
 		if mimes.is_empty() {
 			return true;
 		}
@@ -256,6 +258,7 @@ impl SPath {
 				|| mime == "application/x-sh"
 				|| mime == "application/x-httpd-php"
 				|| mime == "application/x-lua"
+				|| mime == "application/vnd.dart"
 				|| mime.ends_with("+json")
 				|| mime.ends_with("+xml")
 				|| mime.ends_with("+yaml")
@@ -306,7 +309,6 @@ impl SPath {
 	pub fn metadata(&self) -> Result<Metadata> {
 		fs::metadata(self).map_err(|ex| Error::CantGetMetadata((self, ex).into()))
 	}
-
 }
 
 /// Transformers
@@ -819,6 +821,17 @@ mod tests {
 			("LICENSE", true),
 			(".gitignore", true),
 			("notes.txt", true),
+			("main.dart", true),
+			("main.tsv", true),
+			("main.tex", true),
+			("main.scala", true),
+			("main.vue", true),
+			("main.svelte", true),
+			("main.hbs", true),
+			("main.astro", true),
+			("main.cs", true),
+			("main.kt", true),
+			("main.kotlin", true),
 			// binary / non-text extensions
 			("image.png", false),
 			("image.jpg", false),
