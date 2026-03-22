@@ -199,6 +199,7 @@ impl SPath {
 	pub fn is_likely_text(&self) -> bool {
 		// -- Check known text extensions first (fast path, covers gaps in mime_guess)
 		if let Some(ext) = self.extension() {
+			// -- Known text ext
 			let known_text_ext =
 				matches!(
 					ext,
@@ -226,10 +227,12 @@ impl SPath {
 			if known_text_ext {
 				return true;
 			}
-		}
 
-		if self.extension() == Some("lockb") {
-			return false;
+			// -- Known binary ext
+			let known_binary_ext = matches!(ext, "lockb");
+			if known_binary_ext {
+				return false;
+			}
 		}
 
 		// -- Get the mime type and return if found
@@ -763,108 +766,7 @@ pub(crate) fn validate_spath_for_option(path: impl Into<PathBuf>) -> Option<Utf8
 // region:    --- Tests
 
 #[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn test_spath_is_likely_text() {
-		// -- Setup & Fixtures
-		let cases: &[(&str, bool)] = &[
-			// known text extensions
-			("readme.md", true),
-			("readme.markdown", true),
-			("data.csv", true),
-			("config.toml", true),
-			("config.yaml", true),
-			("config.yml", true),
-			("data.json", true),
-			("data.jsonc", true),
-			("data.jsonl", true),
-			("data.ndjson", true),
-			("data.ldjson", true),
-			("doc.xml", true),
-			("page.html", true),
-			("page.htm", true),
-			("styles.css", true),
-			("styles.scss", true),
-			("styles.sass", true),
-			("styles.less", true),
-			("script.js", true),
-			("script.mjs", true),
-			("script.cjs", true),
-			("types.ts", true),
-			("component.tsx", true),
-			("component.jsx", true),
-			("main.rs", true),
-			("main.py", true),
-			("main.rb", true),
-			("main.go", true),
-			("Main.java", true),
-			("main.c", true),
-			("main.cpp", true),
-			("main.h", true),
-			("main.hpp", true),
-			("script.sh", true),
-			("script.bash", true),
-			("script.zsh", true),
-			("script.fish", true),
-			("index.php", true),
-			("script.lua", true),
-			("config.ini", true),
-			("config.cfg", true),
-			("config.conf", true),
-			("query.sql", true),
-			("schema.graphql", true),
-			("schema.gql", true),
-			("icon.svg", true),
-			("app.log", true),
-			(".env", true),
-			("Dockerfile", true),
-			("Makefile", true),
-			("LICENSE", true),
-			(".gitignore", true),
-			("notes.txt", true),
-			("main.dart", true),
-			("main.tsv", true),
-			("main.tex", true),
-			("main.scala", true),
-			("main.vue", true),
-			("main.svelte", true),
-			("main.hbs", true),
-			("main.astro", true),
-			("main.cs", true),
-			("main.kt", true),
-			("main.kotlin", true),
-			("data.lockb", false),
-			// binary / non-text extensions
-			("image.png", false),
-			("image.jpg", false),
-			("image.jpeg", false),
-			("image.gif", false),
-			("image.webp", false),
-			("archive.zip", false),
-			("archive.tar", false),
-			("archive.gz", false),
-			("binary.exe", false),
-			("library.so", false),
-			("library.dll", false),
-			("document.pdf", false),
-			("audio.mp3", false),
-			("video.mp4", false),
-			("font.ttf", false),
-			("font.woff", false),
-		];
-
-		// -- Exec & Check
-		for (filename, expected) in cases {
-			let spath = SPath::new(*filename);
-			let result = spath.is_likely_text();
-			assert_eq!(
-				result, *expected,
-				"is_likely_text({filename:?}) expected {expected} but got {result}"
-			);
-		}
-	}
-}
+#[path = "_tests/tests_spath.rs"]
+mod tests_spath;
 
 // endregion: --- Tests
