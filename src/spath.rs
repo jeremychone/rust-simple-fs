@@ -228,6 +228,10 @@ impl SPath {
 			}
 		}
 
+		if self.extension() == Some("lockb") {
+			return false;
+		}
+
 		// -- Get the mime type and return if found
 		let mimes = mime_guess::from_path(self.path());
 		if mimes.is_empty() {
@@ -831,6 +835,7 @@ mod tests {
 			("main.cs", true),
 			("main.kt", true),
 			("main.kotlin", true),
+			("data.lockb", false),
 			// binary / non-text extensions
 			("image.png", false),
 			("image.jpg", false),
