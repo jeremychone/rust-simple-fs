@@ -211,6 +211,7 @@ simple-fs = {version = "0.12.0-beta.1", features = ["with-json", "with-toml", "b
   - `DEFAULT_EXCLUDE_GLOBS: &[&str]`
   
   - `get_glob_set(globs: &[&str]) -> Result<globset::GlobSet>`
+    - Note: The returned `globset::GlobSet` (from `globset` crate) can be used to check if an `SPath` matches: `glob_set.is_match(spath)`.
   
   - `longest_base_path_wild_free(pattern: &SPath) -> SPath`
   
