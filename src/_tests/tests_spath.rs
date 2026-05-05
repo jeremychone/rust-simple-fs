@@ -69,6 +69,7 @@ fn test_spath_is_likely_text() {
 		("main.cs", true),
 		("main.kt", true),
 		("main.kotlin", true),
+		("my-agent.aip", true),
 		("data.lockb", false),
 		// binary / non-text extensions
 		("image.png", false),

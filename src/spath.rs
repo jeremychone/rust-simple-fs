@@ -204,7 +204,7 @@ impl SPath {
 				matches!(
 					ext,
 					"txt"
-						| "md" | "markdown"
+						| "text" | "md" | "markdown"
 						| "csv" | "toml" | "yaml"
 						| "yml" | "json" | "jsonc"
 						| "json5" | "jsonl"
@@ -222,7 +222,7 @@ impl SPath {
 						| "ini" | "cfg" | "conf"
 						| "sql" | "graphql"
 						| "gql" | "svg" | "log"
-						| "env" | "tex"
+						| "env" | "tex" | "aip"
 				);
 			if known_text_ext {
 				return true;
