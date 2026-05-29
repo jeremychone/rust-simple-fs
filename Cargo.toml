@@ -16,7 +16,7 @@ homepage = "https://github.com/jeremychone/rust-simple-fs"
 repository = "https://github.com/jeremychone/rust-simple-fs"
 
 [lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
 # unused = { level = "allow", priority = -1 } # For exploratory dev.
 
 [features]
