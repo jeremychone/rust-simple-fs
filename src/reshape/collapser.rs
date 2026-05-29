@@ -234,10 +234,8 @@ fn contains_problematic_components(path: &Utf8Path) -> bool {
 			Utf8Component::Prefix(_) | Utf8Component::RootDir => {
 				has_prefix_or_root = true;
 			}
-			Utf8Component::ParentDir => {
-				if normal_seen {
-					has_parent_after_normal = true;
-				}
+			Utf8Component::ParentDir if normal_seen => {
+				has_parent_after_normal = true;
 			}
 			Utf8Component::Normal(_) => {
 				normal_seen = true;

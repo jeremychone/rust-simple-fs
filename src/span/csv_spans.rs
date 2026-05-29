@@ -75,20 +75,18 @@ fn csv_row_spans_from_reader<R: Read>(r: &mut R) -> io::Result<Vec<(usize, usize
 						// No pending: we only set pending when *inside* quotes.
 					}
 				}
-				b'\n' => {
-					if !in_quotes && !quote_pending {
-						// This is a record delimiter. Compute end (exclude preceding \r).
-						let abs_nl = file_pos + i;
-						let end = if i > 0 {
-							if chunk[i - 1] == b'\r' { abs_nl - 1 } else { abs_nl }
-						} else if prev_byte_is_cr {
-							abs_nl - 1
-						} else {
-							abs_nl
-						};
-						spans.push((rec_start, end));
-						rec_start = abs_nl + 1;
-					}
+				b'\n' if !in_quotes && !quote_pending => {
+					// This is a record delimiter. Compute end (exclude preceding \r).
+					let abs_nl = file_pos + i;
+					let end = if i > 0 {
+						if chunk[i - 1] == b'\r' { abs_nl - 1 } else { abs_nl }
+					} else if prev_byte_is_cr {
+						abs_nl - 1
+					} else {
+						abs_nl
+					};
+					spans.push((rec_start, end));
+					rec_start = abs_nl + 1;
 				}
 				_ => { /* regular byte */ }
 			}
