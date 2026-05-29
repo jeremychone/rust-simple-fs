@@ -3,6 +3,8 @@
 mod safer_remove_impl;
 mod safer_remove_options;
 mod safer_trash_impl;
+#[cfg(target_os = "macos")]
+mod safer_trash_mac_support;
 mod safer_trash_options;
 mod support;
 
