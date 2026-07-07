@@ -229,7 +229,7 @@ impl SPath {
 			}
 
 			// -- Known binary ext
-			let known_binary_ext = matches!(ext, "lockb");
+			let known_binary_ext = matches!(ext, "lockb" | "db" | "db3" | "sqlite" | "sqlite3");
 			if known_binary_ext {
 				return false;
 			}

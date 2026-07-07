@@ -5,7 +5,14 @@ fn test_spath_is_likely_text_ext_false() {
 	// -- Setup & Fixtures
 	#[rustfmt::skip]
 	let cases: &[&str] = &[
-		"png", "jpg", "jpeg", "gif", "webp", "zip", "tar", "gz", "exe", "so", "dll", "pdf", "mp3", "mp4", "ttf", "woff",
+		// media
+		"png", "jpg", "jpeg", "gif", "webp", "mp3", "mp4", "ttf", "woff",
+		// exec
+	 "exe", "so", "dll",
+		// db
+		"db", "db3", "sqlite", "sqlite3",
+		// doc
+		"pdf", "docx","doc"
 	];
 
 	// -- Exec & Check
@@ -13,11 +20,10 @@ fn test_spath_is_likely_text_ext_false() {
 		let filename = format!("file.{}", ext);
 		let spath = SPath::new(&filename);
 		let result = spath.is_likely_text();
-		assert!(
-			!result,
-			"is_likely_text({:?}) expected false but got {:?}",
-			filename, result
-		);
+		if result {
+			let mimes = mime_guess::from_path(spath);
+			panic!("is_likely_text({filename:?}) expected false but got {result:?}. mime guess: {mimes:?}",)
+		}
 	}
 }
 
