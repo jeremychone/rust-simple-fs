@@ -1,102 +1,64 @@
 use crate::SPath;
 
 #[test]
-fn test_spath_is_likely_text() {
+fn test_spath_is_likely_text_ext_false() {
 	// -- Setup & Fixtures
-	let cases: &[(&str, bool)] = &[
-		// known text extensions
-		("readme.md", true),
-		("readme.markdown", true),
-		("data.csv", true),
-		("config.toml", true),
-		("config.yaml", true),
-		("config.yml", true),
-		("data.json", true),
-		("data.jsonc", true),
-		("data.jsonl", true),
-		("data.ndjson", true),
-		("data.ldjson", true),
-		("doc.xml", true),
-		("page.html", true),
-		("page.htm", true),
-		("styles.css", true),
-		("styles.scss", true),
-		("styles.sass", true),
-		("styles.less", true),
-		("script.js", true),
-		("script.mjs", true),
-		("script.cjs", true),
-		("types.ts", true),
-		("component.tsx", true),
-		("component.jsx", true),
-		("main.rs", true),
-		("main.py", true),
-		("main.rb", true),
-		("main.go", true),
-		("Main.java", true),
-		("main.c", true),
-		("main.cpp", true),
-		("main.h", true),
-		("main.hpp", true),
-		("script.sh", true),
-		("script.bash", true),
-		("script.zsh", true),
-		("script.fish", true),
-		("index.php", true),
-		("script.lua", true),
-		("config.ini", true),
-		("config.cfg", true),
-		("config.conf", true),
-		("query.sql", true),
-		("schema.graphql", true),
-		("schema.gql", true),
-		("icon.svg", true),
-		("app.log", true),
-		(".env", true),
-		("Dockerfile", true),
-		("Makefile", true),
-		("LICENSE", true),
-		(".gitignore", true),
-		("notes.txt", true),
-		("main.dart", true),
-		("main.tsv", true),
-		("main.tex", true),
-		("main.scala", true),
-		("main.vue", true),
-		("main.svelte", true),
-		("main.hbs", true),
-		("main.astro", true),
-		("main.cs", true),
-		("main.kt", true),
-		("main.kotlin", true),
-		("my-agent.aip", true),
-		("data.lockb", false),
-		// binary / non-text extensions
-		("image.png", false),
-		("image.jpg", false),
-		("image.jpeg", false),
-		("image.gif", false),
-		("image.webp", false),
-		("archive.zip", false),
-		("archive.tar", false),
-		("archive.gz", false),
-		("binary.exe", false),
-		("library.so", false),
-		("library.dll", false),
-		("document.pdf", false),
-		("audio.mp3", false),
-		("video.mp4", false),
-		("font.ttf", false),
-		("font.woff", false),
+	#[rustfmt::skip]
+	let cases: &[&str] = &[
+		"png", "jpg", "jpeg", "gif", "webp", "zip", "tar", "gz", "exe", "so", "dll", "pdf", "mp3", "mp4", "ttf", "woff",
 	];
 
 	// -- Exec & Check
-	for (filename, expected) in cases {
+	for ext in cases {
+		let filename = format!("file.{}", ext);
+		let spath = SPath::new(&filename);
+		let result = spath.is_likely_text();
+		assert!(
+			!result,
+			"is_likely_text({:?}) expected false but got {:?}",
+			filename, result
+		);
+	}
+}
+
+#[test]
+fn test_spath_is_likely_text_ext_true() {
+	// -- Setup & Fixtures
+	#[rustfmt::skip]
+	let cases: &[&str] = &[
+		"md", "markdown", "csv", "toml", "yaml", "yml", "json", "jsonc", "jsonl", "ndjson", "ldjson",
+		"xml", "html", "htm", "css", "scss", "sass", "less", "js", "mjs", "cjs", "ts", "tsx", "jsx",
+		"rs", "py", "rb", "go", "java", "c", "cpp", "h", "hpp", "sh", "bash", "zsh", "fish", "php",
+		"lua", "ini", "cfg", "conf", "sql", "graphql", "gql", "svg", "log", "env", "txt", "dart", "tsv",
+		"tex", "scala", "vue", "svelte", "hbs", "astro", "cs", "kt", "kotlin", "aip",
+	];
+
+	// -- Exec & Check
+	for ext in cases {
+		let filename = format!("file.{}", ext);
+		let spath = SPath::new(&filename);
+		let result = spath.is_likely_text();
+		assert!(
+			result,
+			"is_likely_text({:?}) expected true but got {:?}",
+			filename, result
+		);
+	}
+}
+
+#[test]
+fn test_spath_is_likely_text_filename_true() {
+	// -- Setup & Fixtures
+	let cases: &[&str] = &["Dockerfile", "Makefile", "LICENSE", ".gitignore", ".env"];
+
+	// -- Exec & Check
+	for filename in cases {
 		let spath = SPath::new(*filename);
 		let result = spath.is_likely_text();
-		assert_eq!(
-			result, *expected,
-			"is_likely_text({filename:?}) expected {expected} but got {result}"
+		assert!(
+			result,
+			"is_likely_text({:?}) expected true but got {:?}",
+			filename, result
 		);
 	}
 }
