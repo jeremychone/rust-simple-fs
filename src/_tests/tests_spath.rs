@@ -37,6 +37,7 @@ fn test_spath_is_likely_text_ext_true() {
 		"rs", "py", "rb", "go", "java", "c", "cpp", "h", "hpp", "sh", "bash", "zsh", "fish", "php",
 		"lua", "ini", "cfg", "conf", "sql", "graphql", "gql", "svg", "log", "env", "txt", "dart", "tsv",
 		"tex", "scala", "vue", "svelte", "hbs", "astro", "cs", "kt", "kotlin", "aip",
+		"tmpl",
 	];
 
 	// -- Exec & Check

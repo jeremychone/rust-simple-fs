@@ -223,6 +223,7 @@ impl SPath {
 						| "sql" | "graphql"
 						| "gql" | "svg" | "log"
 						| "env" | "tex" | "aip"
+						| "tmpl" | "hbs"
 				);
 			if known_text_ext {
 				return true;
